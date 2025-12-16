@@ -50,17 +50,15 @@ window.addEventListener("resize", resize);
 
 /* ================= AUDIO (MÓVIL SAFE) ================= */
 const sndHit  = new Audio("https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3");
+sndHit.volume = 0.6;
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const snd = new Audio("https://www.dropbox.com/scl/fi/mqoa3vxv2nn4fh6dvz8r0/christmas-happy-background-442036.mp3?rlkey=7jwlxc28z0n5oeisao5bdtykb&st=tintsaws&dl=1");
+const snd = new Audio("https://www.dropbox.com/scl/fi/mqoa3vxv2nn4fh6dvz8r0/christmas-happy-background-442036.mp3?rlkey=7jwlxc28z0n5oeisao5bdtykb&st=tintsaws&dl=1");;
 const track = audioCtx.createMediaElementSource(snd);
 track.connect(audioCtx.destination);
 
 snd.loop = true;
 snd.volume = 0.3;
-snd.volume = 0.3;
-sndHit.volume = 0.6;
 let musicStarted = false;
-snd.loop = true; // importante
 /* ================= IMÁGENES ================= */
 const santaImg = new Image();
 const icebergImg = new Image();
@@ -359,6 +357,7 @@ document.addEventListener("pointerdown", input, { passive: true });
 </script>
 </body>
 </html>
+
 
 
 
