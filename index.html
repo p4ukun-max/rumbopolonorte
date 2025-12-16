@@ -59,11 +59,8 @@ function startMusic(){
   snd.volume = 0.3;
 
   snd.play()
-    .then(() => {
-      musicStarted = true;
-      console.log("🎵 Música OK");
-    })
-    .catch(err => console.error("Audio error:", err));
+    .then(() => musicStarted = true)
+    .catch(()=>{});
 }
 
 /* ================= IMÁGENES ================= */
@@ -84,10 +81,9 @@ finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?
 
 /* ================= JUEGO ================= */
 const santa = { x:60, y:0, w:0, h:0, vel:0 };
-let pipes=[], gifts=[];
+let pipes=[];
 let gravity=0.45*scale, lift=-8*scale, speed=3*scale;
 let started=false, count=0;
-let finalPlatform=null;
 let interval=null;
 
 function createIceberg(){
@@ -98,10 +94,15 @@ function createIceberg(){
   count++;
 }
 
-function createFinal(){
-  finalPlatform={x:screenW,w:260*scale,h:380*scale};
+function resetGame(){
+  pipes=[];
+  count=0;
+  started=false;
+  santa.vel=0;
+  santa.y=screenH/2;
 }
 
+/* ================= UPDATE ================= */
 function update(){
   if(!started) return;
 
@@ -121,20 +122,9 @@ function update(){
       resetGame();
     }
   });
-
-  if(count===15 && !finalPlatform) createFinal();
 }
 
-function resetGame(){
-  pipes=[];
-  gifts=[];
-  count=0;
-  finalPlatform=null;
-  started=false;
-  santa.vel=0;
-  santa.y=screenH/2;
-}
-
+/* ================= DRAW ================= */
 function draw(){
   ctx.fillStyle="#0b2a45";
   ctx.fillRect(0,0,screenW,screenH);
@@ -160,13 +150,14 @@ function draw(){
   santa.h=santaImg.naturalHeight*SANTA_SCALE;
   ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
 
-  if(!started){
+  if(!musicStarted){
     ctx.fillStyle="white";
     ctx.font="22px sans-serif";
-    ctx.fillText("🔊 Toca la pantalla para empezar",screenW/2,screenH/2);
+    ctx.fillText("🔊 Toca la pantalla para activar sonido",screenW/2,screenH/2);
   }
 }
 
+/* ================= LOOP ================= */
 function loop(){
   update();
   draw();
@@ -175,18 +166,23 @@ function loop(){
 loop();
 
 /* ================= INPUT ================= */
-function input(){
+function jump(){
   startMusic();
+
   if(!started){
     started=true;
     interval=setInterval(createIceberg,1800);
   }
-  santa.vel=lift;
+  santa.vel = lift;
 }
 
-/* EVENTOS COMPATIBLES MÓVIL + PC */
-document.addEventListener("touchstart", input, { once:true });
-document.addEventListener("click", input, { once:true });
+/* AUDIO SE DESBLOQUEA UNA VEZ */
+document.addEventListener("touchstart", startMusic, { once:true });
+document.addEventListener("click", startMusic, { once:true });
+
+/* SALTO SIEMPRE */
+document.addEventListener("touchstart", jump);
+document.addEventListener("click", jump);
 </script>
 </body>
 </html>
