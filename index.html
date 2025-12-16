@@ -50,6 +50,7 @@ window.addEventListener("resize", resize);
 
 /* ================= AUDIO (MÓVIL SAFE) ================= */
 const sndHit  = new Audio("https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3");
+const snd = new Audio("https://www.chosic.com/wp-content/uploads/2024/12/Oh-Xmas-chosic.com_.mp3");
 sndHit.volume = 0.6;
 
 /* ================= IMÁGENES ================= */
@@ -264,6 +265,7 @@ loop();
 let interval;
 function input(){
   if(!started){
+    snd.play();
     started=true;
     interval=setInterval(createIceberg,1800);
   }
@@ -344,3 +346,4 @@ document.addEventListener("mousedown",input);
 </script>
 </body>
 </html>
+
