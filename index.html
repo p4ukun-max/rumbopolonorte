@@ -51,6 +51,7 @@ window.addEventListener("resize", resize);
 /* ================= AUDIO (MÓVIL SAFE) ================= */
 const sndHit  = new Audio("https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3");
 const snd = new Audio("https://www.chosic.com/wp-content/uploads/2024/12/Oh-Xmas-chosic.com_.mp3");
+snd.volume = 0.3;
 sndHit.volume = 0.6;
 
 /* ================= IMÁGENES ================= */
@@ -264,8 +265,12 @@ loop();
 /* ================= INPUT ================= */
 let interval;
 function input(){
+  if(!musicStarted){
+    snd.play().catch(()=>{});
+    musicStarted = true;
+  }
+
   if(!started){
-    snd.play();
     started=true;
     interval=setInterval(createIceberg,1800);
   }
@@ -342,8 +347,8 @@ document.addEventListener("pointerdown", e => {
   e.preventDefault();
   input();
 });
-document.addEventListener("mousedown",input);
 </script>
 </body>
 </html>
+
 
