@@ -19,7 +19,12 @@ canvas { display:block; }
 <body>
 <canvas id="game"></canvas>
 <script>
+function unlockAudio(){
+  startMusic();
+}
 
+document.addEventListener("touchstart", unlockAudio, { once: true });
+document.addEventListener("click", unlockAudio, { once: true });
 /* ================= CANVAS ================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -357,6 +362,7 @@ document.addEventListener("pointerdown", input, { passive: true });
 </script>
 </body>
 </html>
+
 
 
 
