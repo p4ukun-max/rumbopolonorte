@@ -52,7 +52,7 @@ window.addEventListener("resize", resize);
 const sndHit  = new Audio("https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3");
 sndHit.volume = 0.6;
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const snd = new Audio("https://www.dropbox.com/scl/fi/mqoa3vxv2nn4fh6dvz8r0/christmas-happy-background-442036.mp3?rlkey=7jwlxc28z0n5oeisao5bdtykb&st=tintsaws&dl=1");;
+const snd = new Audio("christmas.mp3");;
 const track = audioCtx.createMediaElementSource(snd);
 track.connect(audioCtx.destination);
 
@@ -357,6 +357,7 @@ document.addEventListener("pointerdown", input, { passive: true });
 </script>
 </body>
 </html>
+
 
 
 
