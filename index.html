@@ -50,8 +50,14 @@ window.addEventListener("resize", resize);
 
 /* ================= AUDIO (MÓVIL SAFE) ================= */
 const sndHit  = new Audio("https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3");
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const snd = new Audio("https://www.dropbox.com/scl/fi/mqoa3vxv2nn4fh6dvz8r0/christmas-happy-background-442036.mp3?rlkey=7jwlxc28z0n5oeisao5bdtykb&st=tintsaws&dl=1");
+const track = audioCtx.createMediaElementSource(snd);
+track.connect(audioCtx.destination);
 
+snd.loop = true;
+snd.volume = 0.3;
+let musicStarted = false;
 snd.volume = 0.3;
 sndHit.volume = 0.6;
 let musicStarted = false;
@@ -267,6 +273,10 @@ loop();
 /* ================= INPUT ================= */
 let interval;
 function input(){
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume();
+  }
+
   if(!musicStarted){
     snd.play().catch(()=>{});
     musicStarted = true;
@@ -278,6 +288,7 @@ function input(){
   }
   santa.vel=lift;
 }
+
 function drawAurora() {
   auroraTime += 0.004;
 
@@ -345,13 +356,11 @@ function drawAurora() {
 
   ctx.restore();
 }
-document.addEventListener("pointerdown", e => {
-  e.preventDefault();
-  input();
-});
+document.addEventListener("pointerdown", input, { passive: true });
 </script>
 </body>
 </html>
+
 
 
 
