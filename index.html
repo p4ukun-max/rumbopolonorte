@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Santa Final Landing</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #061526;
+}
+canvas { display:block; }
+</style>
+</head>
+
+<body>
+<canvas id="game"></canvas>
+<script>
+
+/* ================= CANVAS ================= */
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+let auroraTime = 0;
+let auroraActive = false;
+let auroraAlpha = 0;
+let auroraLife = 0;
+let screenW, screenH, scale;
+let SANTA_SCALE = 0.12;
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  screenW = window.innerWidth;
+  screenH = window.innerHeight;
+
+  canvas.width = screenW * dpr;
+  canvas.height = screenH * dpr;
+  canvas.style.width = screenW + "px";
+  canvas.style.height = screenH + "px";
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  scale = Math.min(screenW / 360, 1.2);
+  SANTA_SCALE = 0.12 * scale;
+}
+resize();
+window.addEventListener("resize", resize);
+
+/* ================= AUDIO (MÓVIL SAFE) ================= */
+const sndHit  = new Audio("https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3");
+sndHit.volume = 0.6;
+
+/* ================= IMÁGENES ================= */
+const santaImg = new Image();
+const icebergImg = new Image();
+const finalImg = new Image();
+
+let santaReady=false, icebergReady=false, finalReady=false;
+
+santaImg.onload = () => {
+  santaReady = true;
+  santa.w = santaImg.naturalWidth * SANTA_SCALE;
+  santa.h = santaImg.naturalHeight * SANTA_SCALE;
+  santa.y = screenH/2 - santa.h/2;
+};
+icebergImg.onload = () => icebergReady = true;
+finalImg.onload = () => finalReady = true;
+
+santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?rlkey=06psxs9942im1y7usdg0qgczb&st=wjmlwyyu&dl=1";
+icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=gtcq7vwj&dl=1";
+finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=kufph32f&dl=1";
+
+/* ================= FONDO NAVIDEÑO ================= */
+const lights = Array.from({length: 20}, (_,i)=>({
+  x: (i/20),
+  phase: Math.random()*Math.PI*2
+}));
+function drawBackground() {
+  const bg = ctx.createLinearGradient(0, 0, 0, screenH);
+
+  // 🌌 noche ártica
+  bg.addColorStop(0, "#0b2a45");
+  bg.addColorStop(0.5, "#143d5c");
+  bg.addColorStop(1, "#2a5f7a");
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, screenW, screenH);
+
+  // ✨ luces navideñas suaves
+  lights.forEach(l => {
+    l.phase += 0.02;
+    const y = 40 * scale;
+    const x = l.x * screenW;
+
+    ctx.fillStyle = `rgba(255,220,150,${0.3 + Math.sin(l.phase) * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 4 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+/* ================= NIEVE ================= */
+const snow = Array.from({length: 80},()=>({
+  x: Math.random()*screenW,
+  y: Math.random()*screenH,
+  r: Math.random()*2+1,
+  s: Math.random()*1+0.5
+}));
+
+function drawSnow(){
+  ctx.fillStyle="rgba(255,255,255,0.8)";
+  snow.forEach(f=>{
+    f.y+=f.s;
+    if(f.y>screenH){f.y=-5;f.x=Math.random()*screenW;}
+    ctx.beginPath();
+    ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+    ctx.fill();
+  });
+}
+
+/* ================= JUEGO ================= */
+const santa = { x:60, y:0, w:0, h:0, vel:0 };
+let pipes=[];
+let gravity=0.45*scale, lift=-8*scale, speed=3*scale;
+let started=false, count=0;
+let finalPlatform=null;
+let gifts=[];
+
+function resetGame() {
+  // 🔥 detener creación de icebergs
+  if (interval) {
+    clearInterval(interval);
+    interval = null;
+  }
+
+  // 🔥 borrar todo
+  pipes = [];
+  gifts = [];
+  count = 0;
+  finalPlatform = null;
+
+  // 🔥 estado inicial
+  started = false;
+  santa.vel = 0;
+  santa.y = screenH / 2 - santa.h / 2;
+}
+function spawnGifts(){
+  for(let i=0;i<6;i++){
+    gifts.push({
+      x: santa.x + santa.w/2 + (Math.random()*80-40)*scale,
+      y: santa.y,
+      vel: Math.random()
+    });
+  }
+}
+
+/* ================= ICEBERGS ================= */
+function createIceberg(){
+  if(count>=15) return;
+  const gap=240*scale, margin=80*scale;
+  const top=Math.random()*(screenH-gap-margin*2)+margin;
+  pipes.push({x:screenW,w:80*scale,top,bottom:top+gap});
+  count++;
+}
+
+/* ================= FINAL ================= */
+function createFinal(){
+  finalPlatform={x:screenW,w:260*scale,h:380*scale};
+}
+
+/* ================= UPDATE ================= */
+function update(){
+  if(!started) return;
+
+  santa.vel+=gravity;
+  santa.y+=santa.vel;
+
+  pipes.forEach(p=>p.x-=speed);
+  pipes=pipes.filter(p=>p.x+p.w>0);
+
+  pipes.forEach(p=>{
+    if(
+      santa.x+santa.w>p.x &&
+      santa.x<p.x+p.w &&
+      (santa.y<p.top || santa.y+santa.h>p.bottom)
+    ){
+      sndHit.play();
+      resetGame();
+    }
+  });
+
+  if(count===15 && !finalPlatform) createFinal();
+
+  if(finalPlatform){
+    finalPlatform.x-=speed;
+    if(finalPlatform.x<santa.x+20){
+      santa.y=screenH-finalPlatform.h-santa.h/2;
+      santa.vel=0;
+      spawnGifts();
+      pipes=[];
+    }
+  }
+
+  const finalTop=finalPlatform?screenH-finalPlatform.h:screenH;
+  gifts.forEach(g=>{
+    g.vel+=0.35*scale;
+    g.y+=g.vel;
+    if(g.y>finalTop) g.y=finalTop;
+  });
+}
+
+/* ================= DRAW ================= */
+function draw(){
+  drawBackground();
+  drawAurora(); 
+  drawSnow();
+
+  if(!(santaReady&&icebergReady&&finalReady)){
+    ctx.fillStyle="white";
+    ctx.font="26px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText("Cargando...",screenW/2,screenH/2);
+    return;
+  }
+
+  pipes.forEach(p=>{
+    ctx.save();
+    ctx.translate(p.x,p.top);
+    ctx.scale(1,-1);
+    ctx.drawImage(icebergImg,0,0,icebergImg.width,icebergImg.height,0,0,p.w,p.top);
+    ctx.restore();
+
+    ctx.drawImage(
+      icebergImg,0,0,icebergImg.width,icebergImg.height,
+      p.x,p.bottom,p.w,screenH-p.bottom
+    );
+  });
+
+  if(finalPlatform){
+    ctx.drawImage(finalImg,finalPlatform.x,screenH-finalPlatform.h,finalPlatform.w,finalPlatform.h);
+  }
+
+  santa.w=santaImg.naturalWidth*SANTA_SCALE;
+  santa.h=santaImg.naturalHeight*SANTA_SCALE;
+  ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
+
+  ctx.font=`${36*scale}px serif`;
+  ctx.textAlign="center";
+  gifts.forEach(g=>ctx.fillText("🎁",g.x,g.y));
+
+  if(!started){
+    ctx.fillStyle="white";
+    ctx.font="24px sans-serif";
+    ctx.fillText("Toca para empezar",screenW/2,screenH/2);
+  }
+}
+
+/* ================= LOOP ================= */
+function loop(){update();draw();requestAnimationFrame(loop);}
+loop();
+
+/* ================= INPUT ================= */
+let interval;
+function input(){
+  if(!started){
+    started=true;
+    interval=setInterval(createIceberg,1800);
+  }
+  santa.vel=lift;
+}
+function drawAurora() {
+  auroraTime += 0.004;
+
+  // activar ocasionalmente
+  if (!auroraActive && Math.random() < 0.001) {
+    auroraActive = true;
+    auroraAlpha = 0;
+    auroraLife = 0;
+  }
+
+  if (!auroraActive) return;
+
+  auroraLife++;
+
+  // duración más corta
+  if (auroraLife > 600) { // ~10 segundos
+    auroraAlpha -= 0.004;
+    if (auroraAlpha <= 0) {
+      auroraActive = false;
+      auroraAlpha = 0;
+      return;
+    }
+  } else {
+    auroraAlpha = Math.min(auroraAlpha + 0.01, 0.35);
+  }
+
+  const yBase = screenH * 0.22;
+  const height = screenH * 0.28;
+
+  ctx.save();
+  ctx.globalAlpha = auroraAlpha;
+
+  for (let i = 0; i < 2; i++) {
+    const gradient = ctx.createLinearGradient(0, yBase, 0, yBase + height);
+
+    // 🌈 DOS COLORES
+    gradient.addColorStop(0, "rgba(0,200,160,0)");
+    gradient.addColorStop(
+      0.5,
+      `rgba(120,255,200,${0.25 + Math.sin(auroraTime + i) * 0.1})`
+    );
+    gradient.addColorStop(
+      0.75,
+      `rgba(140,180,255,${0.18 + Math.cos(auroraTime + i) * 0.08})`
+    );
+    gradient.addColorStop(1, "rgba(140,180,255,0)");
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(0, yBase);
+
+    for (let x = 0; x <= screenW; x += 40) {
+      const y =
+        yBase +
+        Math.sin(x * 0.01 + auroraTime * 4 + i) * 28 +
+        Math.sin(auroraTime * 2 + i) * 18;
+      ctx.lineTo(x, y);
+    }
+
+    ctx.lineTo(screenW, yBase + height);
+    ctx.lineTo(0, yBase + height);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+document.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  input();
+});
+document.addEventListener("mousedown",input);
+</script>
+</body>
+</html>
