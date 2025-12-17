@@ -57,10 +57,8 @@ function startMusic(){
   snd = new Audio("christmas.mp3");
   snd.loop = true;
   snd.volume = 0.3;
-
-  snd.play()
-    .then(() => musicStarted = true)
-    .catch(()=>{});
+  snd.play().catch(()=>{});
+  musicStarted = true;
 }
 
 /* ================= IMÁGENES ================= */
@@ -78,46 +76,58 @@ santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1
 icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=gtcq7vwj&dl=1";
 finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=kufph32f&dl=1";
 
-
 /* ================= JUEGO ================= */
 const santa = { x:60, y:0, w:0, h:0, vel:0 };
-let pipes=[];
-let gravity=0.45*scale, lift=-8*scale, speed=3*scale;
-let started=false, count=0;
-let interval=null;
+let pipes = [];
+let gravity, lift, speed;
+let started = false;
+let count = 0;
+let interval = null;
+
+function updatePhysics(){
+  gravity = 0.45 * scale;
+  lift    = -8 * scale;
+  speed   = 3 * scale;
+}
+updatePhysics();
 
 function createIceberg(){
-  if(count>=15) return;
-  const gap=240*scale, margin=80*scale;
-  const top=Math.random()*(screenH-gap-margin*2)+margin;
-  pipes.push({x:screenW,w:80*scale,top,bottom:top+gap});
+  if(count >= 15) return;
+  const gap = 240 * scale;
+  const margin = 80 * scale;
+  const top = Math.random() * (screenH - gap - margin * 2) + margin;
+  pipes.push({ x: screenW, w: 80 * scale, top, bottom: top + gap });
   count++;
 }
 
 function resetGame(){
-  pipes=[];
-  count=0;
-  started=false;
-  santa.vel=0;
-  santa.y=screenH/2;
+  if(interval){
+    clearInterval(interval);
+    interval = null;
+  }
+  pipes = [];
+  count = 0;
+  started = false;
+  santa.vel = 0;
+  santa.y = screenH / 2;
 }
 
 /* ================= UPDATE ================= */
 function update(){
   if(!started) return;
 
-  santa.vel+=gravity;
-  santa.y+=santa.vel;
+  santa.vel += gravity;
+  santa.y += santa.vel;
 
-  pipes.forEach(p=>p.x-=speed);
-  pipes=pipes.filter(p=>p.x+p.w>0);
+  pipes.forEach(p => p.x -= speed);
+  pipes = pipes.filter(p => p.x + p.w > 0);
 
-  pipes.forEach(p=>{
-    if(
-      santa.x+santa.w>p.x &&
-      santa.x<p.x+p.w &&
-      (santa.y<p.top || santa.y+santa.h>p.bottom)
-    ){
+  pipes.forEach(p => {
+    if (
+      santa.x + santa.w > p.x &&
+      santa.x < p.x + p.w &&
+      (santa.y < p.top || santa.y + santa.h > p.bottom)
+    ) {
       sndHit.play();
       resetGame();
     }
@@ -126,34 +136,34 @@ function update(){
 
 /* ================= DRAW ================= */
 function draw(){
-  ctx.fillStyle="#0b2a45";
-  ctx.fillRect(0,0,screenW,screenH);
+  ctx.fillStyle = "#0b2a45";
+  ctx.fillRect(0, 0, screenW, screenH);
 
-  if(!(santaReady&&icebergReady&&finalReady)){
-    ctx.fillStyle="white";
-    ctx.font="24px sans-serif";
-    ctx.textAlign="center";
-    ctx.fillText("Cargando...",screenW/2,screenH/2);
+  if(!(santaReady && icebergReady && finalReady)){
+    ctx.fillStyle = "white";
+    ctx.font = "24px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Cargando...", screenW/2, screenH/2);
     return;
   }
 
-  pipes.forEach(p=>{
-    ctx.drawImage(icebergImg,p.x,p.bottom,p.w,screenH-p.bottom);
+  pipes.forEach(p => {
+    ctx.drawImage(icebergImg, p.x, p.bottom, p.w, screenH - p.bottom);
     ctx.save();
-    ctx.translate(p.x,p.top);
-    ctx.scale(1,-1);
-    ctx.drawImage(icebergImg,0,0,p.w,p.top);
+    ctx.translate(p.x, p.top);
+    ctx.scale(1, -1);
+    ctx.drawImage(icebergImg, 0, 0, p.w, p.top);
     ctx.restore();
   });
 
-  santa.w=santaImg.naturalWidth*SANTA_SCALE;
-  santa.h=santaImg.naturalHeight*SANTA_SCALE;
-  ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
+  santa.w = santaImg.naturalWidth * SANTA_SCALE;
+  santa.h = santaImg.naturalHeight * SANTA_SCALE;
+  ctx.drawImage(santaImg, santa.x, santa.y, santa.w, santa.h);
 
-  if(!musicStarted){
-    ctx.fillStyle="white";
-    ctx.font="22px sans-serif";
-    ctx.fillText("🔊 Toca la pantalla para activar sonido",screenW/2,screenH/2);
+  if(!started){
+    ctx.fillStyle = "white";
+    ctx.font = "22px sans-serif";
+    ctx.fillText("Toca para empezar", screenW/2, screenH/2);
   }
 }
 
@@ -170,19 +180,14 @@ function jump(){
   startMusic();
 
   if(!started){
-    started=true;
-    interval=setInterval(createIceberg,1800);
+    started = true;
+    interval = setInterval(createIceberg, 1800);
   }
   santa.vel = lift;
 }
 
-/* AUDIO SE DESBLOQUEA UNA VEZ */
-document.addEventListener("touchstart", startMusic, { once:true });
-document.addEventListener("click", startMusic, { once:true });
-
-/* SALTO SIEMPRE */
-document.addEventListener("touchstart", jump);
-document.addEventListener("click", jump);
+/* UN SOLO EVENTO LIMPIO */
+document.addEventListener("pointerdown", jump);
 </script>
 </body>
 </html>
