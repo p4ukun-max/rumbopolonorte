@@ -29,6 +29,9 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
+    let gravity = 0;
+	let lift = 0;
+	let speed = 0;
     let screenW, screenH, scale;
     let SANTA_SCALE = 0.12;
 
@@ -95,9 +98,6 @@
     const santa = { x: 60, y: 0, w: 0, h: 0, vel: 0 };
 
     let pipes = [];
-    let gravity = 0;
-	let lift = 0;
-	let speed = 0;
 
     let started = false;
     let count = 0;
@@ -225,4 +225,5 @@
   </script>
 </body>
 </html>
+
 
