@@ -14,14 +14,42 @@
       padding: 0;
       overflow: hidden;
       background: #061526;
+      font-family: sans-serif;
     }
+
     canvas {
       display: block;
+    }
+
+    #soundOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 21, 38, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    #soundBtn {
+      font-size: 22px;
+      padding: 16px 28px;
+      border: none;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #061526;
+      cursor: pointer;
     }
   </style>
 </head>
 
 <body>
+
+  <!-- BOTÓN DE SONIDO -->
+  <div id="soundOverlay">
+    <button id="soundBtn">🔊 Activar música</button>
+  </div>
+
   <canvas id="game"></canvas>
 
   <script>
@@ -29,11 +57,12 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
-    let gravity = 0;
-	let lift = 0;
-	let speed = 0;
     let screenW, screenH, scale;
     let SANTA_SCALE = 0.12;
+
+    let gravity = 0;
+    let lift = 0;
+    let speed = 0;
 
     function resize() {
       const dpr = window.devicePixelRatio || 1;
@@ -66,15 +95,20 @@
 
     let snd = null;
     let musicStarted = false;
+    let audioUnlocked = false;
 
-    function startMusic() {
-      if (musicStarted) return;
+    function unlockAudio() {
+      if (audioUnlocked) return;
 
       snd = new Audio("christmas.mp3");
       snd.loop = true;
       snd.volume = 0.3;
-      snd.play().catch(() => {});
-      musicStarted = true;
+
+      snd.play().then(() => {
+        audioUnlocked = true;
+        musicStarted = true;
+        document.getElementById("soundOverlay").style.display = "none";
+      }).catch(() => {});
     }
 
     /* ================= IMÁGENES ================= */
@@ -90,15 +124,17 @@
     icebergImg.onload = () => (icebergReady = true);
     finalImg.onload = () => (finalReady = true);
 
-    santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?rlkey=06psxs9942im1y7usdg0qgczb&st=wjmlwyyu&dl=1";
-	icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=gtcq7vwj&dl=1";
-	finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=kufph32f&dl=1";
+    santaImg.src =
+      "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?dl=1";
+    icebergImg.src =
+      "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?dl=1";
+    finalImg.src =
+      "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?dl=1";
 
     /* ================= JUEGO ================= */
     const santa = { x: 60, y: 0, w: 0, h: 0, vel: 0 };
 
     let pipes = [];
-
     let started = false;
     let count = 0;
     let interval = null;
@@ -192,10 +228,11 @@
       if (!started) {
         ctx.fillStyle = "white";
         ctx.font = "22px sans-serif";
+        ctx.textAlign = "center";
         ctx.fillText(
           "Toca para empezar",
           screenW / 2,
-          screenH / 2
+          screenH / 2 + 60
         );
       }
     }
@@ -210,7 +247,7 @@
 
     /* ================= INPUT ================= */
     function jump() {
-      startMusic();
+      if (!audioUnlocked) return;
 
       if (!started) {
         started = true;
@@ -220,10 +257,8 @@
       santa.vel = lift;
     }
 
-    /* UN SOLO EVENTO LIMPIO */
     document.addEventListener("pointerdown", jump);
+    document.getElementById("soundBtn").addEventListener("click", unlockAudio);
   </script>
 </body>
 </html>
-
-
