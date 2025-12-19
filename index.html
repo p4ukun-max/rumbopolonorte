@@ -1,264 +1,246 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, user-scalable=no"
-  >
-  <title>Santa Final Landing</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Rumbo al Polo Norte</title>
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #061526;
-      font-family: sans-serif;
-    }
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #061526;
+  font-family: sans-serif;
+}
+canvas { display: block; }
 
-    canvas {
-      display: block;
-    }
-
-    #soundOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(6, 21, 38, 0.95);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-    }
-
-    #soundBtn {
-      font-size: 22px;
-      padding: 16px 28px;
-      border: none;
-      border-radius: 12px;
-      background: #ffffff;
-      color: #061526;
-      cursor: pointer;
-    }
-  </style>
+#soundOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6,21,38,.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+#soundBtn {
+  font-size: 22px;
+  padding: 16px 28px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+}
+</style>
 </head>
 
 <body>
 
-  <!-- BOTÓN DE SONIDO -->
-  <div id="soundOverlay">
-    <button id="soundBtn">🔊 Activar música</button>
-  </div>
+<div id="soundOverlay">
+  <button id="soundBtn">🔊 Activar música</button>
+</div>
 
-  <canvas id="game"></canvas>
+<canvas id="game"></canvas>
 
-  <script>
-    /* ================= CANVAS ================= */
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+<script>
+/* ================= CANVAS ================= */
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-    let screenW, screenH, scale;
-    let SANTA_SCALE = 0.12;
+let screenW, screenH, scale;
+let gravity = 0, lift = 0, speed = 0;
+let SANTA_SCALE = 0.12;
 
-    let gravity = 0;
-    let lift = 0;
-    let speed = 0;
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  screenW = innerWidth;
+  screenH = innerHeight;
 
-    function resize() {
-      const dpr = window.devicePixelRatio || 1;
-      screenW = window.innerWidth;
-      screenH = window.innerHeight;
+  canvas.width = screenW * dpr;
+  canvas.height = screenH * dpr;
+  canvas.style.width = screenW + "px";
+  canvas.style.height = screenH + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      canvas.width = screenW * dpr;
-      canvas.height = screenH * dpr;
-      canvas.style.width = screenW + "px";
-      canvas.style.height = screenH + "px";
+  scale = Math.min(screenW / 360, 1.2);
+  SANTA_SCALE = 0.12 * scale;
 
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  gravity = 0.45 * scale;
+  lift = -8 * scale;
+  speed = 3 * scale;
+}
+resize();
+addEventListener("resize", resize);
 
-      scale = Math.min(screenW / 360, 1.2);
-      SANTA_SCALE = 0.12 * scale;
+/* ================= AUDIO ================= */
+let snd = null, audioUnlocked = false;
+const sndHit = new Audio("https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3");
+sndHit.volume = .6;
 
-      gravity = 0.45 * scale;
-      lift = -8 * scale;
-      speed = 3 * scale;
-    }
+function unlockAudio() {
+  if (audioUnlocked) return;
+  snd = new Audio("christmas.mp3");
+  snd.loop = true;
+  snd.volume = .3;
+  snd.play().then(() => {
+    audioUnlocked = true;
+    document.getElementById("soundOverlay").style.display = "none";
+  }).catch(()=>{});
+}
+document.getElementById("soundBtn").onclick = unlockAudio;
 
-    resize();
-    window.addEventListener("resize", resize);
+/* ================= IMÁGENES ================= */
+const santaImg = new Image();
+const icebergImg = new Image();
+const finalImg = new Image();
 
-    /* ================= AUDIO ================= */
-    const sndHit = new Audio(
-      "https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3"
-    );
-    sndHit.volume = 0.6;
+let ready = { santa:false, iceberg:false, final:false };
+santaImg.onload = () => ready.santa = true;
+icebergImg.onload = () => ready.iceberg = true;
+finalImg.onload = () => ready.final = true;
 
-    let snd = null;
-    let musicStarted = false;
-    let audioUnlocked = false;
+santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?rlkey=06psxs9942im1y7usdg0qgczb&st=wjmlwyyu&dl=1";
+icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=gtcq7vwj&dl=1";
+finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=kufph32f&dl=1";
 
-    function unlockAudio() {
-      if (audioUnlocked) return;
+/* ================= JUEGO ================= */
+const santa = { x: 60, y: 0, w: 0, h: 0, vel: 0 };
+let pipes = [];
+let gifts = [];
+let started = false;
+let finished = false;
+let count = 0;
+let interval = null;
 
-      snd = new Audio("christmas.mp3");
-      snd.loop = true;
-      snd.volume = 0.3;
+/* ================= ICEBERGS ================= */
+function createIceberg() {
+  if (count >= 15) {
+    finished = true;
+    clearInterval(interval);
+    interval = setInterval(dropGift, 250);
+    return;
+  }
 
-      snd.play().then(() => {
-        audioUnlocked = true;
-        musicStarted = true;
-        document.getElementById("soundOverlay").style.display = "none";
-      }).catch(() => {});
-    }
+  const gap = 240 * scale;
+  const margin = 80 * scale;
+  const top = Math.random() * (screenH - gap - margin*2) + margin;
 
-    /* ================= IMÁGENES ================= */
-    const santaImg = new Image();
-    const icebergImg = new Image();
-    const finalImg = new Image();
+  pipes.push({
+    x: screenW,
+    w: 80 * scale,
+    top,
+    bottom: top + gap
+  });
 
-    let santaReady = false;
-    let icebergReady = false;
-    let finalReady = false;
+  count++;
+}
 
-    santaImg.onload = () => (santaReady = true);
-    icebergImg.onload = () => (icebergReady = true);
-    finalImg.onload = () => (finalReady = true);
+/* ================= REGALOS ================= */
+function dropGift() {
+  gifts.push({
+    x: santa.x + santa.w / 2 - 10 * scale,
+    y: santa.y + santa.h,
+    size: 20 * scale,
+    speed: 2 + Math.random() * 2
+  });
+}
 
-    santaImg.src =
-      "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?dl=1";
-    icebergImg.src =
-      "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?dl=1";
-    finalImg.src =
-      "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?dl=1";
+/* ================= UPDATE ================= */
+function update() {
+  if (!started) return;
 
-    /* ================= JUEGO ================= */
-    const santa = { x: 60, y: 0, w: 0, h: 0, vel: 0 };
+  santa.vel += gravity;
+  santa.y += santa.vel;
 
-    let pipes = [];
-    let started = false;
-    let count = 0;
-    let interval = null;
+  pipes.forEach(p => p.x -= speed);
+  pipes = pipes.filter(p => p.x + p.w > 0);
 
-    function createIceberg() {
-      if (count >= 15) return;
-
-      const gap = 240 * scale;
-      const margin = 80 * scale;
-      const top =
-        Math.random() * (screenH - gap - margin * 2) + margin;
-
-      pipes.push({
-        x: screenW,
-        w: 80 * scale,
-        top,
-        bottom: top + gap,
-      });
-
-      count++;
-    }
-
-    function resetGame() {
-      if (interval) {
-        clearInterval(interval);
-        interval = null;
+  if (!finished) {
+    pipes.forEach(p => {
+      if (
+        santa.x + santa.w > p.x &&
+        santa.x < p.x + p.w &&
+        (santa.y < p.top || santa.y + santa.h > p.bottom)
+      ) {
+        sndHit.play();
+        location.reload();
       }
+    });
+  }
 
-      pipes = [];
-      count = 0;
-      started = false;
-      santa.vel = 0;
-      santa.y = screenH / 2;
-    }
+  if (finished) {
+    const finalH = finalImg.naturalHeight * scale;
+    const floorY = screenH - finalH + finalH;
 
-    /* ================= UPDATE ================= */
-    function update() {
-      if (!started) return;
+    gifts.forEach(g => g.y += g.speed);
+    gifts = gifts.filter(g => g.y < floorY);
+  }
+}
 
-      santa.vel += gravity;
-      santa.y += santa.vel;
+/* ================= DRAW ================= */
+function draw() {
+  ctx.fillStyle = "#0b2a45";
+  ctx.fillRect(0,0,screenW,screenH);
 
-      pipes.forEach((p) => (p.x -= speed));
-      pipes = pipes.filter((p) => p.x + p.w > 0);
+  if (!ready.santa || !ready.iceberg || !ready.final) {
+    ctx.fillStyle = "#fff";
+    ctx.font = "24px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Cargando...", screenW/2, screenH/2);
+    return;
+  }
 
-      pipes.forEach((p) => {
-        if (
-          santa.x + santa.w > p.x &&
-          santa.x < p.x + p.w &&
-          (santa.y < p.top || santa.y + santa.h > p.bottom)
-        ) {
-          sndHit.play();
-          resetGame();
-        }
-      });
-    }
+  pipes.forEach(p => {
+    ctx.drawImage(icebergImg, p.x, p.bottom, p.w, screenH - p.bottom);
+    ctx.save();
+    ctx.translate(p.x, p.top);
+    ctx.scale(1,-1);
+    ctx.drawImage(icebergImg,0,0,p.w,p.top);
+    ctx.restore();
+  });
 
-    /* ================= DRAW ================= */
-    function draw() {
-      ctx.fillStyle = "#0b2a45";
-      ctx.fillRect(0, 0, screenW, screenH);
+  santa.w = santaImg.naturalWidth * SANTA_SCALE;
+  santa.h = santaImg.naturalHeight * SANTA_SCALE;
+  ctx.drawImage(santaImg, santa.x, santa.y, santa.w, santa.h);
 
-      if (!(santaReady && icebergReady && finalReady)) {
-        ctx.fillStyle = "white";
-        ctx.font = "24px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("Cargando...", screenW / 2, screenH / 2);
-        return;
-      }
+  if (finished) {
+    const fw = finalImg.naturalWidth * scale;
+    const fh = finalImg.naturalHeight * scale;
+    const fx = screenW/2 - fw/2;
+    const fy = screenH - fh;
+    ctx.drawImage(finalImg, fx, fy, fw, fh);
 
-      pipes.forEach((p) => {
-        ctx.drawImage(
-          icebergImg,
-          p.x,
-          p.bottom,
-          p.w,
-          screenH - p.bottom
-        );
+    ctx.fillStyle = "#ff3b3b";
+    gifts.forEach(g => ctx.fillRect(g.x, g.y, g.size, g.size));
+  }
 
-        ctx.save();
-        ctx.translate(p.x, p.top);
-        ctx.scale(1, -1);
-        ctx.drawImage(icebergImg, 0, 0, p.w, p.top);
-        ctx.restore();
-      });
+  if (!started) {
+    ctx.fillStyle = "#fff";
+    ctx.font = "22px sans-serif";
+    ctx.fillText("Toca para empezar", screenW/2, screenH/2);
+  }
+}
 
-      santa.w = santaImg.naturalWidth * SANTA_SCALE;
-      santa.h = santaImg.naturalHeight * SANTA_SCALE;
-      ctx.drawImage(santaImg, santa.x, santa.y, santa.w, santa.h);
+/* ================= LOOP ================= */
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
 
-      if (!started) {
-        ctx.fillStyle = "white";
-        ctx.font = "22px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(
-          "Toca para empezar",
-          screenW / 2,
-          screenH / 2 + 60
-        );
-      }
-    }
+/* ================= INPUT ================= */
+addEventListener("pointerdown", () => {
+  if (!audioUnlocked) return;
 
-    /* ================= LOOP ================= */
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
-    }
-    loop();
+  if (!started) {
+    started = true;
+    santa.y = screenH / 2;
+    interval = setInterval(createIceberg, 1800);
+  }
+  santa.vel = lift;
+});
+</script>
 
-    /* ================= INPUT ================= */
-    function jump() {
-      if (!audioUnlocked) return;
-
-      if (!started) {
-        started = true;
-        interval = setInterval(createIceberg, 1800);
-      }
-
-      santa.vel = lift;
-    }
-
-    document.addEventListener("pointerdown", jump);
-    document.getElementById("soundBtn").addEventListener("click", unlockAudio);
-  </script>
 </body>
 </html>
