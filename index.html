@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Rumbo al Polo Norte</title>
-
 <style>
 html, body {
   margin: 0;
@@ -15,42 +14,104 @@ html, body {
 }
 canvas { display: block; }
 
-/* ===== MENÚ INICIO ===== */
+/* ===== MENÚ INICIO NAVIDEÑO ===== */
 #startMenu {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at top, #0b3d66, #061526);
+  background:
+    radial-gradient(circle at top, #0b4d2c, #061526 60%),
+    linear-gradient(#061526, #021018);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 10;
   color: white;
+  overflow: hidden;
 }
 
+/* ===== LUCES NAVIDEÑAS ===== */
+#startMenu::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: -5%;
+  width: 110%;
+  height: 80px;
+  background-repeat: repeat-x;
+  background-size: 60px 60px;
+  background-image:
+    radial-gradient(circle, red 30%, transparent 31%),
+    radial-gradient(circle, gold 30%, transparent 31%),
+    radial-gradient(circle, lime 30%, transparent 31%),
+    radial-gradient(circle, cyan 30%, transparent 31%);
+  background-position: 0 0, 15px 0, 30px 0, 45px 0;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.6));
+  animation: blinkLights 1.8s infinite alternate;
+}
+
+@keyframes blinkLights {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* ===== TÍTULO ===== */
 #startMenu h1 {
-  font-size: 32px;
-  margin-bottom: 30px;
-  text-shadow: 0 0 12px #7fffd4;
+  font-size: 40px;
+  margin-bottom: 40px;
+  text-shadow:
+    0 0 12px #7fffd4,
+    0 0 25px rgba(255,255,255,.6);
+  z-index: 1;
 }
 
+/* ===== BOTÓN ===== */
 #startBtn {
-  font-size: 22px;
-  padding: 16px 34px;
-  border-radius: 30px;
+  font-size: 24px;
+  padding: 18px 42px;
+  border-radius: 40px;
   border: none;
   cursor: pointer;
-  background: linear-gradient(135deg, #ffffff, #ccefff);
-  color: #061526;
-  box-shadow: 0 0 25px #7fffd4;
+  background: linear-gradient(135deg, #ffffff, #d4faff);
+  color: #06321f;
+  box-shadow:
+    0 0 20px #7fffd4,
+    inset 0 0 10px rgba(255,255,255,.8);
+  transition: transform .2s ease, box-shadow .2s ease;
+  z-index: 1;
+}
+
+#startBtn:hover {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 35px #7fffd4,
+    0 0 60px rgba(255,255,255,.6);
+}
+
+/* ===== EFECTO NIEVE SUAVE ===== */
+#startMenu::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(white 1px, transparent 1px);
+  background-size: 120px 120px;
+  opacity: .15;
+  animation: snowMove 20s linear infinite;
+}
+
+@keyframes snowMove {
+  from { background-position: 0 0; }
+  to { background-position: 0 500px; }
 }
 </style>
+
 </head>
 
 <body>
 
 <div id="startMenu">
-  <h1>🎄 Rumbo al Polo Norte 🎄</h1>
+  <h1>Rumbo al Polo Norte</h1>
   <button id="startBtn">Iniciar Juego</button>
 </div>
 
@@ -71,8 +132,8 @@ function resize() {
   screenH = innerHeight;
   canvas.width = screenW * dpr;
   canvas.height = screenH * dpr;
-  canvas.style.width = screenW+"px";
-  canvas.style.height = screenH+"px";
+  canvas.style.width = screenW + "px";
+  canvas.style.height = screenH + "px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
 
   scale = Math.min(screenW / 360, 1.2);
@@ -101,9 +162,10 @@ const santaImg = new Image();
 const icebergImg = new Image();
 const finalImg = new Image();
 
-    santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?rlkey=06psxs9942im1y7usdg0qgczb&st=wjmlwyyu&dl=1";
-    icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=gtcq7vwj&dl=1";
-    finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=kufph32f&dl=1";
+
+santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?rlkey=06psxs9942im1y7usdg0qgczb&st=wjmlwyyu&dl=1";
+icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=gtcq7vwj&dl=1";
+finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=kufph32f&dl=1";
 
 /* ================= JUEGO ================= */
 const santa = { x:60, y:0, w:0, h:0, vel:0 };
@@ -112,7 +174,7 @@ let started=false, finished=false;
 let count=0, interval=null;
 
 /* ================= NIEVE ================= */
-for(let i=0;i<120;i++){
+for(let i=0;i<140;i++){
   snow.push({
     x: Math.random()*screenW,
     y: Math.random()*screenH,
@@ -132,17 +194,40 @@ function drawSnow(){
   });
 }
 
-/* ================= AURORA ================= */
-let auroraTimer = 0;
-function drawAurora(){
-  auroraTimer++;
-  if(auroraTimer>300) auroraTimer=0;
-  const g=ctx.createLinearGradient(0,0,screenW,0);
-  g.addColorStop(0,"rgba(0,255,200,0.15)");
-  g.addColorStop(.5,"rgba(100,255,255,0.25)");
-  g.addColorStop(1,"rgba(0,200,255,0.15)");
-  ctx.fillStyle=g;
-  ctx.fillRect(0,0,screenW,screenH/3);
+/* ================= AURORA BOREAL (ONDAS) ================= */
+let auroraT = 0;
+function drawAurora() {
+  auroraT += 0.01;
+
+  const height = screenH * 0.35;
+  const step = 8;
+
+  // capa verde
+  ctx.fillStyle = "rgba(80,255,180,0.25)";
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  for (let x = 0; x <= screenW; x += step) {
+    const y = height * 0.4 +
+      Math.sin(x * 0.01 + auroraT) * 25 +
+      Math.sin(x * 0.02 + auroraT * 1.5) * 15;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(screenW, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // capa violeta
+  ctx.fillStyle = "rgba(160,120,255,0.18)";
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  for (let x = 0; x <= screenW; x += step) {
+    const y = height * 0.25 +
+      Math.sin(x * 0.012 - auroraT * 1.2) * 20;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(screenW, 0);
+  ctx.closePath();
+  ctx.fill();
 }
 
 /* ================= ICEBERGS ================= */
@@ -159,12 +244,11 @@ function createIceberg(){
   count++;
 }
 
-/* ================= REGALOS ================= */
+/* ================= REGALOS (EMOJI) ================= */
 function dropGift(){
   gifts.push({
     x:santa.x+santa.w/2,
     y:santa.y+santa.h,
-    s:20*scale,
     v:2+Math.random()*2
   });
 }
@@ -172,8 +256,10 @@ function dropGift(){
 /* ================= UPDATE ================= */
 function update(){
   if(!started) return;
+
   santa.vel+=gravity;
   santa.y+=santa.vel;
+
   pipes.forEach(p=>p.x-=speed);
   pipes=pipes.filter(p=>p.x+p.w>0);
 
@@ -191,9 +277,8 @@ function update(){
   }
 
   if(finished){
-    const fh=screenH*0.25;
     gifts.forEach(g=>g.y+=g.v);
-    gifts=gifts.filter(g=>g.y<screenH-fh+fh);
+    gifts=gifts.filter(g=>g.y < screenH);
   }
 }
 
@@ -213,6 +298,7 @@ function resetGame(){
 function draw(){
   ctx.fillStyle="#061526";
   ctx.fillRect(0,0,screenW,screenH);
+
   drawAurora();
   drawSnow();
 
@@ -230,11 +316,14 @@ function draw(){
   ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
 
   if(finished){
-    const fh=screenH*0.25;
-    const fw=finalImg.naturalWidth*(fh/finalImg.naturalHeight);
-    ctx.drawImage(finalImg,screenW/2-fw/2,screenH-fh,fw,fh);
-    ctx.fillStyle="#ff3b3b";
-    gifts.forEach(g=>ctx.fillRect(g.x,g.y,g.s,g.s));
+    const fh = screenH * 0.25;
+    const fw = finalImg.naturalWidth * (fh / finalImg.naturalHeight);
+    ctx.drawImage(finalImg, screenW/2-fw/2, screenH-fh, fw, fh);
+
+    ctx.font = `${24*scale}px serif`;
+    gifts.forEach(g=>{
+      ctx.fillText("🎁", g.x, g.y);
+    });
   }
 }
 
