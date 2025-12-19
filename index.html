@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rumbo al Polo Norte</title>
 <style>
-html,body{margin:0;overflow:hidden;background:#061526}
+html,body{
+  margin:0;
+  overflow:hidden;
+  background:#061526;
+}
 canvas{display:block}
 </style>
 </head>
@@ -14,90 +18,161 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
+/* ================= CANVAS ================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 let W,H,scale;
 function resize(){
-  W=innerWidth;H=innerHeight;
-  canvas.width=W;canvas.height=H;
-  scale=Math.min(W/360,1.2);
+  W = innerWidth;
+  H = innerHeight;
+  canvas.width = W;
+  canvas.height = H;
+  scale = Math.min(W/360,1.2);
 }
 resize();
-addEventListener("resize",resize);
+addEventListener("resize", resize);
 
-/* IMÁGENES */
-const santaImg=new Image();
-const icebergImg=new Image();
-const finalImg=new Image();
-   santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?rlkey=06psxs9942im1y7usdg0qgczb&st=wjmlwyyu&dl=1";
-    icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=gtcq7vwj&dl=1";
-    finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=kufph32f&dl=1";
+/* ================= IMÁGENES ================= */
+const santaImg = new Image();
+const icebergImg = new Image();
+const finalImg = new Image();
+santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?dl=1";
+icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?dl=1";
+finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?dl=1";
 
-/* SANTA */
-const santa={x:60,y:H/2,w:0,h:0,vy:0};
-const gravity=0.45*scale;
-const lift=-8*scale;
-const speed=3*scale;
-const SANTA_SCALE=0.12*scale;
+/* ================= SANTA ================= */
+const santa = {
+  x: 70,
+  y: H/2,
+  w: 0,
+  h: 0,
+  vy: 0
+};
 
-/* JUEGO */
-let pipes=[];
-let finished=false;
-let landed=false;
-let interval;
+const GRAVITY = 0.45 * scale;
+const LIFT    = -8 * scale;
+const SPEED   = 3 * scale;
+const SANTA_SCALE = 0.12 * scale;
 
-/* ICEBERG */
-function createIceberg(){
-  finished=true;
-  clearInterval(interval);
+/* ================= JUEGO ================= */
+const MAX_ICEBERGS = 5;
+let icebergs = [];
+let passed = 0;
+let finished = false;
+let landed = false;
+let spawnTimer;
+
+/* ================= ICEBERGS ================= */
+function spawnIceberg(){
+  if(passed >= MAX_ICEBERGS) return;
+
+  const gap = 230 * scale;
+  const top = Math.random() * (H - gap - 160*scale) + 80*scale;
+
+  icebergs.push({
+    x: W,
+    w: 80 * scale,
+    top,
+    bottom: top + gap,
+    counted: false
+  });
 }
 
-/* UPDATE */
+/* ================= UPDATE ================= */
 function update(){
-  santa.vy+=gravity;
-  santa.y+=santa.vy;
+  santa.vy += GRAVITY;
+  santa.y  += santa.vy;
 
-  // suelo
-  const fh=H*0.25;
-  const groundY=H-fh-santa.h*0.1;
+  // mover icebergs
+  icebergs.forEach(i => i.x -= SPEED);
+  icebergs = icebergs.filter(i => i.x + i.w > 0);
 
-  if(finished && santa.y>=groundY){
-    santa.y=groundY;
-    santa.vy=0;
-    landed=true;
+  // colisión
+  if(!finished){
+    icebergs.forEach(i=>{
+      if(
+        santa.x + santa.w > i.x &&
+        santa.x < i.x + i.w &&
+        (santa.y < i.top || santa.y + santa.h > i.bottom)
+      ){
+        resetGame();
+      }
+
+      // contar iceberg pasado
+      if(!i.counted && i.x + i.w < santa.x){
+        i.counted = true;
+        passed++;
+
+        if(passed === MAX_ICEBERGS){
+          finished = true;
+          clearInterval(spawnTimer);
+        }
+      }
+    });
+  }
+
+  // suelo final
+  if(finished){
+    const fh = H * 0.25;
+    const groundY = H - fh - santa.h * 0.1;
+
+    if(santa.y >= groundY){
+      santa.y = groundY;
+      santa.vy = 0;
+      landed = true;
+    }
+  }
+
+  // límite inferior
+  if(santa.y + santa.h > H){
+    santa.y = H - santa.h;
+    santa.vy = 0;
   }
 }
 
-/* DRAW */
+/* ================= DRAW ================= */
 function draw(){
-  ctx.fillStyle="#061526";
+  ctx.fillStyle = "#061526";
   ctx.fillRect(0,0,W,H);
 
-  santa.w=santaImg.naturalWidth*SANTA_SCALE;
-  santa.h=santaImg.naturalHeight*SANTA_SCALE;
-  ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
+  // icebergs
+  icebergs.forEach(i=>{
+    ctx.drawImage(icebergImg, i.x, i.bottom, i.w, H - i.bottom);
+    ctx.save();
+    ctx.translate(i.x, i.top);
+    ctx.scale(1,-1);
+    ctx.drawImage(icebergImg, 0, 0, i.w, i.top);
+    ctx.restore();
+  });
 
+  // santa
+  santa.w = santaImg.naturalWidth  * SANTA_SCALE;
+  santa.h = santaImg.naturalHeight * SANTA_SCALE;
+  ctx.drawImage(santaImg, santa.x, santa.y, santa.w, santa.h);
+
+  // imagen final
   if(finished){
-    const fh=H*0.25;
-    const fw=finalImg.naturalWidth*(fh/finalImg.naturalHeight);
-    ctx.drawImage(finalImg,W/2-fw/2,H-fh,fw,fh);
+    const fh = H * 0.25;
+    const fw = finalImg.naturalWidth * (fh / finalImg.naturalHeight);
+    ctx.drawImage(finalImg, W/2 - fw/2, H - fh, fw, fh);
   }
 
+  // mensaje final
   if(landed){
-    ctx.fillStyle="rgba(0,0,0,0.6)";
-    ctx.fillRect(0,H*0.35,W,120);
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
+    ctx.fillRect(0, H*0.35, W, 120);
 
-    ctx.fillStyle="#fff";
-    ctx.font=`${42*scale}px serif`;
-    ctx.textAlign="center";
-    ctx.shadowColor="#7fffd4";
-    ctx.shadowBlur=15;
-    ctx.fillText("🎄 ¡JUEGO COMPLETADO! 🎄",W/2,H*0.35+75);
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "center";
+    ctx.font = `${42*scale}px serif`;
+    ctx.shadowColor = "#7fffd4";
+    ctx.shadowBlur = 15;
+    ctx.fillText("🎄 ¡JUEGO COMPLETADO! 🎄", W/2, H*0.35 + 75);
   }
 }
 
-/* LOOP */
+/* ================= LOOP ================= */
 function loop(){
   update();
   draw();
@@ -105,11 +180,30 @@ function loop(){
 }
 loop();
 
-/* INPUT */
-addEventListener("pointerdown",()=>santa.vy=lift);
+/* ================= INPUT ================= */
+addEventListener("pointerdown", ()=>{
+  santa.vy = LIFT;
+});
 
-/* START */
-interval=setTimeout(createIceberg,3000);
+/* ================= START ================= */
+function startGame(){
+  icebergs = [];
+  passed = 0;
+  finished = false;
+  landed = false;
+  santa.y = H/2;
+  santa.vy = 0;
+
+  spawnTimer = setInterval(spawnIceberg, 1800);
+}
+
+startGame();
+
+/* ================= RESET ================= */
+function resetGame(){
+  clearInterval(spawnTimer);
+  startGame();
+}
 </script>
 </body>
 </html>
