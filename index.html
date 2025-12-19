@@ -11,33 +11,47 @@ html, body {
   padding: 0;
   overflow: hidden;
   background: #061526;
-  font-family: sans-serif;
+  font-family: system-ui, sans-serif;
 }
 canvas { display: block; }
 
-#soundOverlay {
+/* ===== MENÚ INICIO ===== */
+#startMenu {
   position: fixed;
   inset: 0;
-  background: rgba(6,21,38,.95);
+  background: radial-gradient(circle at top, #0b3d66, #061526);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 10;
+  color: white;
 }
-#soundBtn {
+
+#startMenu h1 {
+  font-size: 32px;
+  margin-bottom: 30px;
+  text-shadow: 0 0 12px #7fffd4;
+}
+
+#startBtn {
   font-size: 22px;
-  padding: 16px 28px;
-  border-radius: 12px;
+  padding: 16px 34px;
+  border-radius: 30px;
   border: none;
   cursor: pointer;
+  background: linear-gradient(135deg, #ffffff, #ccefff);
+  color: #061526;
+  box-shadow: 0 0 25px #7fffd4;
 }
 </style>
 </head>
 
 <body>
 
-<div id="soundOverlay">
-  <button id="soundBtn">🔊 Activar música</button>
+<div id="startMenu">
+  <h1>🎄 Rumbo al Polo Norte 🎄</h1>
+  <button id="startBtn">Iniciar Juego</button>
 </div>
 
 <canvas id="game"></canvas>
@@ -52,19 +66,17 @@ let gravity = 0, lift = 0, speed = 0;
 let SANTA_SCALE = 0.12;
 
 function resize() {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = devicePixelRatio || 1;
   screenW = innerWidth;
   screenH = innerHeight;
-
   canvas.width = screenW * dpr;
   canvas.height = screenH * dpr;
-  canvas.style.width = screenW + "px";
-  canvas.style.height = screenH + "px";
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  canvas.style.width = screenW+"px";
+  canvas.style.height = screenH+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
 
   scale = Math.min(screenW / 360, 1.2);
   SANTA_SCALE = 0.12 * scale;
-
   gravity = 0.45 * scale;
   lift = -8 * scale;
   speed = 3 * scale;
@@ -75,154 +87,159 @@ addEventListener("resize", resize);
 /* ================= AUDIO ================= */
 let snd = null, audioUnlocked = false;
 const sndHit = new Audio("https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3");
-sndHit.volume = .6;
 
-function unlockAudio() {
+function startAudio() {
   if (audioUnlocked) return;
   snd = new Audio("christmas.mp3");
   snd.loop = true;
   snd.volume = .3;
-  snd.play().then(() => {
-    audioUnlocked = true;
-    document.getElementById("soundOverlay").style.display = "none";
-  }).catch(()=>{});
+  snd.play().then(()=> audioUnlocked=true).catch(()=>{});
 }
-document.getElementById("soundBtn").onclick = unlockAudio;
 
 /* ================= IMÁGENES ================= */
 const santaImg = new Image();
 const icebergImg = new Image();
 const finalImg = new Image();
 
-let ready = { santa:false, iceberg:false, final:false };
-santaImg.onload = () => ready.santa = true;
-icebergImg.onload = () => ready.iceberg = true;
-finalImg.onload = () => ready.final = true;
-
-santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?rlkey=06psxs9942im1y7usdg0qgczb&st=wjmlwyyu&dl=1";
-icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=gtcq7vwj&dl=1";
-finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=kufph32f&dl=1";
+    santaImg.src   = "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_1.png?rlkey=06psxs9942im1y7usdg0qgczb&st=wjmlwyyu&dl=1";
+    icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=gtcq7vwj&dl=1";
+    finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=kufph32f&dl=1";
 
 /* ================= JUEGO ================= */
-const santa = { x: 60, y: 0, w: 0, h: 0, vel: 0 };
-let pipes = [];
-let gifts = [];
-let started = false;
-let finished = false;
-let count = 0;
-let interval = null;
+const santa = { x:60, y:0, w:0, h:0, vel:0 };
+let pipes=[], gifts=[], snow=[];
+let started=false, finished=false;
+let count=0, interval=null;
+
+/* ================= NIEVE ================= */
+for(let i=0;i<120;i++){
+  snow.push({
+    x: Math.random()*screenW,
+    y: Math.random()*screenH,
+    r: Math.random()*2+1,
+    s: Math.random()*1.5+0.5
+  });
+}
+
+function drawSnow(){
+  ctx.fillStyle="white";
+  snow.forEach(f=>{
+    f.y+=f.s;
+    if(f.y>screenH) f.y=0;
+    ctx.beginPath();
+    ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+    ctx.fill();
+  });
+}
+
+/* ================= AURORA ================= */
+let auroraTimer = 0;
+function drawAurora(){
+  auroraTimer++;
+  if(auroraTimer>300) auroraTimer=0;
+  const g=ctx.createLinearGradient(0,0,screenW,0);
+  g.addColorStop(0,"rgba(0,255,200,0.15)");
+  g.addColorStop(.5,"rgba(100,255,255,0.25)");
+  g.addColorStop(1,"rgba(0,200,255,0.15)");
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,screenW,screenH/3);
+}
 
 /* ================= ICEBERGS ================= */
-function createIceberg() {
-  if (count >= 15) {
-    finished = true;
+function createIceberg(){
+  if(count>=15){
+    finished=true;
     clearInterval(interval);
-    interval = setInterval(dropGift, 250);
+    interval=setInterval(dropGift,250);
     return;
   }
-
-  const gap = 240 * scale;
-  const margin = 80 * scale;
-  const top = Math.random() * (screenH - gap - margin*2) + margin;
-
-  pipes.push({
-    x: screenW,
-    w: 80 * scale,
-    top,
-    bottom: top + gap
-  });
-
+  const gap=240*scale;
+  const top=Math.random()*(screenH-gap-160*scale)+80*scale;
+  pipes.push({x:screenW,w:80*scale,top,bottom:top+gap});
   count++;
 }
 
 /* ================= REGALOS ================= */
-function dropGift() {
+function dropGift(){
   gifts.push({
-    x: santa.x + santa.w / 2 - 10 * scale,
-    y: santa.y + santa.h,
-    size: 20 * scale,
-    speed: 2 + Math.random() * 2
+    x:santa.x+santa.w/2,
+    y:santa.y+santa.h,
+    s:20*scale,
+    v:2+Math.random()*2
   });
 }
 
 /* ================= UPDATE ================= */
-function update() {
-  if (!started) return;
+function update(){
+  if(!started) return;
+  santa.vel+=gravity;
+  santa.y+=santa.vel;
+  pipes.forEach(p=>p.x-=speed);
+  pipes=pipes.filter(p=>p.x+p.w>0);
 
-  santa.vel += gravity;
-  santa.y += santa.vel;
-
-  pipes.forEach(p => p.x -= speed);
-  pipes = pipes.filter(p => p.x + p.w > 0);
-
-  if (!finished) {
-    pipes.forEach(p => {
-      if (
-        santa.x + santa.w > p.x &&
-        santa.x < p.x + p.w &&
-        (santa.y < p.top || santa.y + santa.h > p.bottom)
-      ) {
+  if(!finished){
+    pipes.forEach(p=>{
+      if(
+        santa.x+santa.w>p.x &&
+        santa.x<p.x+p.w &&
+        (santa.y<p.top || santa.y+santa.h>p.bottom)
+      ){
         sndHit.play();
-        location.reload();
+        resetGame();
       }
     });
   }
 
-  if (finished) {
-    const finalH = finalImg.naturalHeight * scale;
-    const floorY = screenH - finalH + finalH;
-
-    gifts.forEach(g => g.y += g.speed);
-    gifts = gifts.filter(g => g.y < floorY);
+  if(finished){
+    const fh=screenH*0.25;
+    gifts.forEach(g=>g.y+=g.v);
+    gifts=gifts.filter(g=>g.y<screenH-fh+fh);
   }
 }
 
+function resetGame(){
+  pipes=[];
+  gifts=[];
+  finished=false;
+  count=0;
+  santa.y=screenH/2;
+  santa.vel=0;
+  started=true;
+  clearInterval(interval);
+  interval=setInterval(createIceberg,1800);
+}
+
 /* ================= DRAW ================= */
-function draw() {
-  ctx.fillStyle = "#0b2a45";
+function draw(){
+  ctx.fillStyle="#061526";
   ctx.fillRect(0,0,screenW,screenH);
+  drawAurora();
+  drawSnow();
 
-  if (!ready.santa || !ready.iceberg || !ready.final) {
-    ctx.fillStyle = "#fff";
-    ctx.font = "24px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("Cargando...", screenW/2, screenH/2);
-    return;
-  }
-
-  pipes.forEach(p => {
-    ctx.drawImage(icebergImg, p.x, p.bottom, p.w, screenH - p.bottom);
+  pipes.forEach(p=>{
+    ctx.drawImage(icebergImg,p.x,p.bottom,p.w,screenH-p.bottom);
     ctx.save();
-    ctx.translate(p.x, p.top);
+    ctx.translate(p.x,p.top);
     ctx.scale(1,-1);
     ctx.drawImage(icebergImg,0,0,p.w,p.top);
     ctx.restore();
   });
 
-  santa.w = santaImg.naturalWidth * SANTA_SCALE;
-  santa.h = santaImg.naturalHeight * SANTA_SCALE;
-  ctx.drawImage(santaImg, santa.x, santa.y, santa.w, santa.h);
+  santa.w=santaImg.naturalWidth*SANTA_SCALE;
+  santa.h=santaImg.naturalHeight*SANTA_SCALE;
+  ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
 
-  if (finished) {
-    const fw = finalImg.naturalWidth * scale;
-    const fh = finalImg.naturalHeight * scale;
-    const fx = screenW/2 - fw/2;
-    const fy = screenH - fh;
-    ctx.drawImage(finalImg, fx, fy, fw, fh);
-
-    ctx.fillStyle = "#ff3b3b";
-    gifts.forEach(g => ctx.fillRect(g.x, g.y, g.size, g.size));
-  }
-
-  if (!started) {
-    ctx.fillStyle = "#fff";
-    ctx.font = "22px sans-serif";
-    ctx.fillText("Toca para empezar", screenW/2, screenH/2);
+  if(finished){
+    const fh=screenH*0.25;
+    const fw=finalImg.naturalWidth*(fh/finalImg.naturalHeight);
+    ctx.drawImage(finalImg,screenW/2-fw/2,screenH-fh,fw,fh);
+    ctx.fillStyle="#ff3b3b";
+    gifts.forEach(g=>ctx.fillRect(g.x,g.y,g.s,g.s));
   }
 }
 
 /* ================= LOOP ================= */
-function loop() {
+function loop(){
   update();
   draw();
   requestAnimationFrame(loop);
@@ -230,17 +247,18 @@ function loop() {
 loop();
 
 /* ================= INPUT ================= */
-addEventListener("pointerdown", () => {
-  if (!audioUnlocked) return;
-
-  if (!started) {
-    started = true;
-    santa.y = screenH / 2;
-    interval = setInterval(createIceberg, 1800);
-  }
-  santa.vel = lift;
+addEventListener("pointerdown",()=>{
+  if(!started) return;
+  santa.vel=lift;
 });
-</script>
 
+document.getElementById("startBtn").onclick=()=>{
+  startAudio();
+  document.getElementById("startMenu").style.display="none";
+  started=true;
+  santa.y=screenH/2;
+  interval=setInterval(createIceberg,1800);
+};
+</script>
 </body>
 </html>
