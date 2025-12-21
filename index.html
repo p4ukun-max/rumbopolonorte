@@ -215,19 +215,71 @@ function drawSnow(){
 }
 
 /* ===== AURORA ===== */
-let auroraT=0;
+let auroraT = 0;
+let auroraVisible = false;
+let auroraTimer = 0;
+setInterval(() => {
+  if (!auroraVisible && Math.random() < 0.4) {
+    auroraVisible = true;
+    auroraTimer = 0;
+  }
+}, 6000);
 function drawAurora(){
-  auroraT+=0.01;
-  ctx.fillStyle="rgba(80,255,180,0.25)";
+  if(!auroraVisible) return;
+
+  auroraT += 0.01;
+  auroraTimer++;
+
+  if(auroraTimer > 240){ // ~4 segundos
+    auroraVisible = false;
+    return;
+  }
+
+  const h = screenH * 0.35;
+  const step = 10;
+
+  //Verde
+  ctx.fillStyle = "rgba(120,255,200,0.22)";
   ctx.beginPath();
   ctx.moveTo(0,0);
-  for(let x=0;x<=screenW;x+=8){
-    ctx.lineTo(x,screenH*0.12+Math.sin(x*0.01+auroraT)*20);
+  for(let x=0;x<=screenW;x+=step){
+    ctx.lineTo(
+      x,
+      h*0.4 + Math.sin(x*0.01 + auroraT)*25
+    );
+  }
+  ctx.lineTo(screenW,0);
+  ctx.fill();
+
+  //Violeta
+  ctx.fillStyle = "rgba(180,130,255,0.18)";
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  for(let x=0;x<=screenW;x+=step){
+    ctx.lineTo(
+      x,
+      h*0.25 + Math.sin(x*0.013 - auroraT*1.3)*20
+    );
   }
   ctx.lineTo(screenW,0);
   ctx.fill();
 }
+//AIRE
 
+let windSound = null;
+
+function playWind(){
+  if(Math.random() < 0.35){ // no siempre
+    windSound = new Audio("wind.mp3"); // usa tu archivo
+    windSound.volume = 0.25;
+    windSound.play().catch(()=>{});
+  }
+}
+setInterval(() => {
+  if(started && !finished){
+    playWind();
+  }
+}, 8000);
 /* ===== JUEGO ===== */
 const santa={x:60,y:0,w:120,h:90,vel:0};
 let pipes=[], gifts=[];
@@ -403,4 +455,3 @@ startBtn.onclick = () => {
 </script>
 </body>
 </html>
-
