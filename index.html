@@ -6,131 +6,102 @@
 <title>Rumbo al Polo Norte</title>
 
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: #061526;
-  font-family: system-ui, sans-serif;
+html,body{
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  background:#061526;
+  font-family:system-ui,sans-serif;
 }
-canvas { display: block; }
+canvas{display:block}
 
-/* ===== MENÚ INICIO ===== */
-#startMenu {
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(circle at top, #0b4d2c, #061526 60%),
-    linear-gradient(#061526, #021018);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  color: white;
-  overflow: hidden;
+/* ===== LOADING ===== */
+#loadingScreen{
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle,#0b4d2c,#061526);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:30;
+  color:white;
 }
-
-/* LUCES */
-#startMenu::before {
-  content: "";
-  position: absolute;
-  top: 20px;
-  left: -5%;
-  width: 110%;
-  height: 80px;
-  background-repeat: repeat-x;
-  background-size: 60px 60px;
-  background-image:
-    radial-gradient(circle, red 30%, transparent 31%),
-    radial-gradient(circle, gold 30%, transparent 31%),
-    radial-gradient(circle, lime 30%, transparent 31%),
-    radial-gradient(circle, cyan 30%, transparent 31%);
-  background-position: 0 0, 15px 0, 30px 0, 45px 0;
-  animation: blinkLights 1.8s infinite alternate;
+.spinner{
+  width:60px;
+  height:60px;
+  border:6px solid rgba(255,255,255,.2);
+  border-top-color:#7fffd4;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin-bottom:20px;
 }
+@keyframes spin{to{transform:rotate(360deg)}}
 
-@keyframes blinkLights {
-  from { opacity: .6; }
-  to { opacity: 1; }
+/* ===== MENÚ ===== */
+#startMenu{
+  position:fixed;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:10;
+  color:white;
 }
-
-/* TÍTULO */
-#startMenu h1 {
-  font-size: 40px;
-  margin-bottom: 30px;
-  text-shadow: 0 0 15px #7fffd4;
+#startMenu h1{
+  font-size:40px;
+  margin-bottom:25px;
+  text-shadow:0 0 15px #7fffd4;
 }
 
-/* ===== SELECTOR SANTA ===== */
-#santaSelector {
-  text-align: center;
-  margin-bottom: 35px;
+/* SELECTOR */
+.santaOptions{
+  display:flex;
+  gap:18px;
+  margin-bottom:30px;
 }
-
-#santaSelector p {
-  margin-bottom: 12px;
-  font-size: 18px;
+.santaOptions img{
+  width:70px;
+  padding:6px;
+  border-radius:16px;
+  cursor:pointer;
+  background:rgba(255,255,255,.12);
+  transition:.2s;
 }
-
-.santaOptions {
-  display: flex;
-  gap: 18px;
-}
-
-.santaOptions img {
-  width: 70px;
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 16px;
-  background: rgba(255,255,255,.12);
-  transition: transform .2s, box-shadow .2s, background .2s;
-}
-
-.santaOptions img:hover {
-  transform: scale(1.1);
-}
-
-.santaOptions img.selected {
-  background: rgba(255,255,255,.9);
-  box-shadow: 0 0 25px #7fffd4;
+.santaOptions img:hover{transform:scale(1.1)}
+.santaOptions img.selected{
+  background:rgba(255,255,255,.9);
+  box-shadow:0 0 25px #7fffd4;
 }
 
 /* BOTÓN */
-#startBtn {
-  font-size: 24px;
-  padding: 18px 42px;
-  border-radius: 40px;
-  border: none;
-  cursor: pointer;
-  background: linear-gradient(135deg, #ffffff, #d4faff);
-  color: #06321f;
-  box-shadow: 0 0 25px #7fffd4;
-  transition: transform .2s;
-}
-
-#startBtn:hover {
-  transform: scale(1.08);
+#startBtn{
+  font-size:24px;
+  padding:18px 42px;
+  border-radius:40px;
+  border:none;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
+<!-- LOADING -->
+<div id="loadingScreen">
+  <div style="text-align:center">
+    <div class="spinner"></div>
+    <p>Cargando magia navideña… 🎄✨</p>
+  </div>
+</div>
+
+<!-- MENÚ -->
 <div id="startMenu">
   <h1>Rumbo al Polo Norte</h1>
-
-  <div id="santaSelector">
-    <p>Elige tu Santa 🎅</p>
-    <div class="santaOptions">
-      <img data-santa="0">
-      <img data-santa="1">
-      <img data-santa="2">
-      <img data-santa="3">
-    </div>
+  <div class="santaOptions">
+    <img><img><img><img>
   </div>
-
-  <button id="startBtn">Iniciar Juego</button>
+  <button id="startBtn" disabled>Iniciar Juego</button>
 </div>
 
 <canvas id="game"></canvas>
@@ -141,8 +112,7 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 let screenW, screenH, scale;
-let gravity = 0, lift = 0, speed = 0;
-let SANTA_SCALE = 0.20;
+let gravity, lift, speed, SANTA_SCALE;
 
 function resize(){
   const dpr = devicePixelRatio || 1;
@@ -150,12 +120,10 @@ function resize(){
   screenH = innerHeight;
   canvas.width = screenW * dpr;
   canvas.height = screenH * dpr;
-  canvas.style.width = screenW + "px";
-  canvas.style.height = screenH + "px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
 
   scale = Math.min(screenW / 360, 1.2);
-  SANTA_SCALE = 0.12 * scale;
+  SANTA_SCALE = 0.22 * scale;
   gravity = 0.45 * scale;
   lift = -8 * scale;
   speed = 3 * scale;
@@ -164,15 +132,19 @@ resize();
 addEventListener("resize", resize);
 
 /* ================= AUDIO ================= */
-let snd = null, audioUnlocked = false;
-const sndHit = new Audio("https://assets.mixkit.co/active_storage/sfx/1109/1109-preview.mp3");
+let music = null;
+let audioUnlocked = false;
 
-function startAudio(){
+function startMusic(){
   if(audioUnlocked) return;
-  snd = new Audio("christmas.mp3");
-  snd.loop = true;
-  snd.volume = .3;
-  snd.play().then(()=>audioUnlocked=true).catch(()=>{});
+
+  music = new Audio("christmas.mp3");
+  music.loop = true;
+  music.volume = 0.4;
+
+  music.play()
+    .then(()=> audioUnlocked = true)
+    .catch(err => console.warn("Audio bloqueado:", err));
 }
 
 /* ================= IMÁGENES ================= */
@@ -180,106 +152,174 @@ const santaImg = new Image();
 const icebergImg = new Image();
 const finalImg = new Image();
 
-/* 👉 CAMBIA ESTAS URLS */
-const santaImages = [
-  "URL_SANTA_1.png",
-  "URL_SANTA_2.png",
-  "URL_SANTA_3.png",
-  "URL_SANTA_4.png"
+const santaPreviewImages = [
+  "https://www.dropbox.com/scl/fi/9wfq8we1wn0kdrnjxz52x/random.png?dl=1",
+  "https://www.dropbox.com/scl/fi/njdnkyqh8vfr0skbgt3f5/boris.png?dl=1",
+  "https://www.dropbox.com/scl/fi/kmh8kxrpmfbqekxhnmbga/lluna.png?dl=1",
+  "https://www.dropbox.com/scl/fi/l01xkq152sww7j6kat85c/pitufa.png?dl=1"
 ];
 
-let selectedSanta = 0;
-santaImg.src = santaImages[selectedSanta];
+const santaGameImages = [
+  "https://www.dropbox.com/scl/fi/h4usenwnm66m3s4mbpgsj/trineo_1.png?dl=1",
+  "https://www.dropbox.com/scl/fi/h4usenwnm66m3s4mbpgsj/trineo_1.png?dl=1",
+  "https://www.dropbox.com/scl/fi/05dnhea63myd1guwnotqi/trineo_3.png?dl=1",
+  "https://www.dropbox.com/scl/fi/h4usenwnm66m3s4mbpgsj/trineo_1.png?dl=1"
+];
 
 icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?dl=1";
 finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?dl=1";
 
-/* ================= JUEGO ================= */
-const santa = { x:60, y:0, w:0, h:0, vel:0 };
-let pipes=[], gifts=[];
-let started=false, finished=false;
-let count=0, interval=null;
+/* ================= PRECARGA ================= */
+let assetsReady=false;
+function preload(urls, done){
+  let loaded=0;
+  const timeout=setTimeout(done,5000);
+  urls.forEach(src=>{
+    const img=new Image();
+    img.onload=img.onerror=()=>{
+      loaded++;
+      if(loaded>=urls.length){
+        clearTimeout(timeout);
+        done();
+      }
+    };
+    img.src=src;
+  });
+}
 
-/* ================= AURORA ================= */
-let auroraT = 0;
+preload([
+  ...santaPreviewImages,
+  ...santaGameImages,
+  icebergImg.src,
+  finalImg.src
+],()=>{
+  assetsReady=true;
+  document.getElementById("loadingScreen").style.display="none";
+  document.getElementById("startBtn").disabled=false;
+});
+
+/* ================= FONDO ================= */
+let snow=[];
+for(let i=0;i<140;i++){
+  snow.push({
+    x:Math.random()*innerWidth,
+    y:Math.random()*innerHeight,
+    r:Math.random()*2+1,
+    s:Math.random()*1.5+0.5
+  });
+}
+function drawSnow(){
+  ctx.fillStyle="white";
+  snow.forEach(f=>{
+    f.y+=f.s;
+    if(f.y>screenH) f.y=0;
+    ctx.beginPath();
+    ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+    ctx.fill();
+  });
+}
+
+let auroraT=0;
 function drawAurora(){
-  auroraT += 0.01;
-  const h = screenH * 0.35;
-  ctx.fillStyle="rgba(80,255,180,.25)";
+  auroraT+=0.01;
+  const h=screenH*0.35;
+  ctx.fillStyle="rgba(80,255,180,0.25)";
   ctx.beginPath();
   ctx.moveTo(0,0);
   for(let x=0;x<=screenW;x+=8){
-    ctx.lineTo(x, h*0.4 + Math.sin(x*0.01+auroraT)*30);
+    ctx.lineTo(x,h*0.4+Math.sin(x*0.01+auroraT)*30);
   }
   ctx.lineTo(screenW,0);
   ctx.fill();
 }
 
-/* ================= ICEBERGS ================= */
+/* ================= JUEGO ================= */
+const santa={x:60,y:0,w:0,h:0,vel:0};
+let pipes=[], gifts=[];
+let started=false, finished=false;
+let passed=0, interval=null;
+let randomMode=true, selectedSanta=1;
+
+/* ICEBERGS */
 function createIceberg(){
-  if(count>=3){
-    finished=true;
-    clearInterval(interval);
-    interval=setInterval(dropGift,250);
-    return;
-  }
-  const gap=240*scale;
+  const gap=220*scale;
   const top=Math.random()*(screenH-gap-160*scale)+80*scale;
-  pipes.push({x:screenW,w:80*scale,top,bottom:top+gap});
-  count++;
+  pipes.push({x:screenW,w:80*scale,top,bottom:top+gap,passed:false});
 }
 
+/* REGALOS */
 function dropGift(){
+  const targetX = screenW / 2;
+  const targetY = screenH - screenH * 0.25;
   gifts.push({
-    x:santa.x+santa.w/2,
-    y:santa.y+santa.h,
-    v:2+Math.random()*2
+    x: santa.x + santa.w * 0.55,
+    y: santa.y + santa.h * 0.85,
+    tx: targetX,
+    ty: targetY,
+    p: 0
   });
 }
 
-/* ================= UPDATE ================= */
+/* RESET */
+function resetGame(){
+  pipes=[];
+  gifts=[];
+  passed=0;
+  finished=false;
+  santa.y=screenH/2;
+  santa.vel=0;
+}
+
+/* UPDATE */
 function update(){
   if(!started) return;
 
-  santa.vel+=gravity;
-  santa.y+=santa.vel;
-
-  pipes.forEach(p=>p.x-=speed);
-  pipes=pipes.filter(p=>p.x+p.w>0);
+  if(!finished){
+    santa.vel+=gravity;
+    santa.y+=santa.vel;
+  }
 
   pipes.forEach(p=>{
-    if(!finished &&
+    p.x-=speed;
+
+    if(
+      !finished &&
       santa.x+santa.w>p.x &&
       santa.x<p.x+p.w &&
       (santa.y<p.top || santa.y+santa.h>p.bottom)
     ){
-      sndHit.play();
       resetGame();
+    }
+
+    if(!p.passed && p.x+p.w<santa.x){
+      p.passed=true;
+      passed++;
+      if(passed>=5){
+        finished=true;
+        clearInterval(interval);
+        interval=setInterval(dropGift,300);
+      }
     }
   });
 
+  pipes=pipes.filter(p=>p.x+p.w>0);
+
   if(finished){
-    gifts.forEach(g=>g.y+=g.v);
-    gifts=gifts.filter(g=>g.y<screenH);
+    gifts.forEach(g=>{
+      g.p+=0.02;
+      g.x += (g.tx - g.x) * g.p;
+      g.y += (g.ty - g.y) * g.p;
+    });
   }
 }
 
-function resetGame(){
-  pipes=[];
-  gifts=[];
-  finished=false;
-  count=0;
-  santa.y=screenH/2;
-  santa.vel=0;
-  interval=setInterval(createIceberg,1800);
-}
-
-/* ================= DRAW ================= */
+/* DRAW */
 function draw(){
   ctx.fillStyle="#061526";
   ctx.fillRect(0,0,screenW,screenH);
 
   drawAurora();
+  drawSnow();
 
   pipes.forEach(p=>{
     ctx.drawImage(icebergImg,p.x,p.bottom,p.w,screenH-p.bottom);
@@ -290,50 +330,65 @@ function draw(){
     ctx.restore();
   });
 
-  santa.w=santaImg.naturalWidth*SANTA_SCALE;
-  santa.h=santaImg.naturalHeight*SANTA_SCALE;
-  ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
+  if(started && assetsReady && santaImg.complete){
+    const BASE_W=380, BASE_H=280;
+    santa.w=BASE_W*SANTA_SCALE;
+    santa.h=BASE_H*SANTA_SCALE;
+    ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
+  }
 
   if(finished){
-    gifts.forEach(g=>{
-      ctx.font=`${24*scale}px serif`;
-      ctx.fillText("🎁",g.x,g.y);
-    });
+    const fh=screenH*0.25;
+    const fw=finalImg.naturalWidth*(fh/finalImg.naturalHeight);
+    ctx.drawImage(finalImg,screenW/2-fw/2,screenH-fh,fw,fh);
+    ctx.font=`${28*scale}px serif`;
+    gifts.forEach(g=>ctx.fillText("🎁",g.x,g.y));
   }
 }
 
-/* ================= LOOP ================= */
-function loop(){
+/* LOOP */
+(function loop(){
   update();
   draw();
   requestAnimationFrame(loop);
-}
-loop();
+})();
 
-/* ================= INPUT ================= */
+/* INPUT */
 addEventListener("pointerdown",()=>{
-  if(started) santa.vel=lift;
+  if(started && !finished) santa.vel=lift;
 });
 
-/* ================= SELECTOR ================= */
-const santaOptions=document.querySelectorAll(".santaOptions img");
-santaOptions.forEach((img,i)=>{
-  img.src=santaImages[i];
+/* SELECTOR */
+const opts=document.querySelectorAll(".santaOptions img");
+opts.forEach((img,i)=>{
+  img.src=santaPreviewImages[i];
   img.onclick=()=>{
-    selectedSanta=i;
-    santaImg.src=santaImages[i];
-    santaOptions.forEach(o=>o.classList.remove("selected"));
+    if(i===0){
+      randomMode=true;
+    }else{
+      randomMode=false;
+      selectedSanta=i;
+      santaImg.src=santaGameImages[selectedSanta];
+    }
+    opts.forEach(o=>o.classList.remove("selected"));
     img.classList.add("selected");
   };
 });
-santaOptions[0].classList.add("selected");
+opts[0].classList.add("selected");
 
-/* ================= START ================= */
+/* START */
 document.getElementById("startBtn").onclick=()=>{
-  startAudio();
+  startMusic(); // 🔊 audio desbloqueado aquí
+
   document.getElementById("startMenu").style.display="none";
+
+  if(randomMode){
+    selectedSanta=Math.floor(Math.random()*3)+1;
+    santaImg.src=santaGameImages[selectedSanta];
+  }
+
   started=true;
-  santa.y=screenH/2;
+  resetGame();
   interval=setInterval(createIceberg,1800);
 };
 </script>
