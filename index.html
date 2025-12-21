@@ -106,13 +106,28 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
+let victoryMusic = null;
+
+function playVictoryMusic(){
+  if(music){
+    music.pause();
+    music.currentTime = 0;
+  }
+
+  victoryMusic = new Audio("victory.mp3"); // 🎄 música final
+  victoryMusic.volume = 0.5;
+  victoryMusic.play().catch(()=>{});
+}
 /* ================= CANVAS ================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 let screenW, screenH, scale;
 let gravity, lift, speed, SANTA_SCALE;
-
+let isMobile = false;
+let santaSizeFactor = 1;
+let icebergSizeFactor = 1;
+  
 function resize(){
   const dpr = devicePixelRatio || 1;
   screenW = innerWidth;
@@ -122,7 +137,15 @@ function resize(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
 
   scale = Math.min(screenW / 360, 1.2);
-  SANTA_SCALE = 0.22 * scale;
+
+  // 📱 detección móvil
+  isMobile = screenW < 768;
+
+  // 🎅 tamaños adaptativos
+  santaSizeFactor   = isMobile ? 0.75 : 1;
+  icebergSizeFactor = isMobile ? 0.8  : 1;
+
+  SANTA_SCALE = 0.22 * scale * santaSizeFactor;
   gravity = 0.45 * scale;
   lift = -8 * scale;
   speed = 3 * scale;
@@ -241,9 +264,18 @@ let randomMode=true, selectedSanta=1;
 
 /* ICEBERGS */
 function createIceberg(){
-  const gap=220*scale;
-  const top=Math.random()*(screenH-gap-160*scale)+80*scale;
-  pipes.push({x:screenW,w:80*scale,top,bottom:top+gap,passed:false});
+  if(finished) return; // ⛔ no crear más
+
+  const gap = 220 * scale;
+  const top = Math.random()*(screenH-gap-160*scale)+80*scale;
+
+  pipes.push({
+    x: screenW,
+    w: 80 * scale * icebergSizeFactor,
+    top,
+    bottom: top + gap,
+    passed: false
+  });
 }
 
 /* REGALOS */
@@ -296,6 +328,7 @@ function update(){
       if(passed>=5){
         finished=true;
         clearInterval(interval);
+        playVictoryMusic();
         interval=setInterval(dropGift,300);
       }
     }
@@ -400,4 +433,5 @@ document.getElementById("startBtn").onclick = () => {
 </script>
 </body>
 </html>
+
 
