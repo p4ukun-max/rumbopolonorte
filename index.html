@@ -123,6 +123,7 @@ function playVictoryMusic(){
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+let snow=[];
 let screenW, screenH, scale;
 let gravity, lift, speed, SANTA_SCALE;
 let isMobile = false;
@@ -224,7 +225,6 @@ preload([
 });
 
 /* ================= FONDO ================= */
-let snow=[];
 
 function initSnow(){
   snow=[];
@@ -443,4 +443,3 @@ document.getElementById("startBtn").onclick = () => {
 </script>
 </body>
 </html>
-
