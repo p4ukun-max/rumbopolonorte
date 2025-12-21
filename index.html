@@ -376,20 +376,28 @@ opts.forEach((img,i)=>{
 opts[0].classList.add("selected");
 
 /* START */
-document.getElementById("startBtn").onclick=()=>{
-  startMusic(); // 🔊 audio desbloqueado aquí
+document.getElementById("startBtn").onclick = () => {
+  // 🔊 desbloquea audio (gesto del usuario)
+  startMusic();
 
-  document.getElementById("startMenu").style.display="none";
+  // ⛔ desactiva el botón para evitar dobles toques
+  document.getElementById("startBtn").disabled = true;
 
-  if(randomMode){
-    selectedSanta=Math.floor(Math.random()*3)+1;
-    santaImg.src=santaGameImages[selectedSanta];
-  }
+  // ⏱️ deja respirar al navegador (CLAVE en móvil)
+  requestAnimationFrame(() => {
+    document.getElementById("startMenu").style.display = "none";
 
-  started=true;
-  resetGame();
-  interval=setInterval(createIceberg,1800);
+    if (randomMode) {
+      selectedSanta = Math.floor(Math.random() * 3) + 1;
+      santaImg.src = santaGameImages[selectedSanta];
+    }
+
+    started = true;
+    resetGame();
+    interval = setInterval(createIceberg, 1800);
+  });
 };
 </script>
 </body>
 </html>
+
