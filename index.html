@@ -345,48 +345,62 @@ addEventListener("pointerdown",()=>{
 });
 
 /* ===== SELECTOR (RANDOM FIX) ===== */
-let randomMode=true;
-let selectedSanta=0;
-const opts=document.querySelectorAll(".santaOptions img");
+const opts = document.querySelectorAll(".santaOptions img");
 
-opts.forEach((img,i)=>{
-  img.src=santaPreviewImages[i];
-  img.onclick=()=>{
-    opts.forEach(o=>o.classList.remove("selected"));
+opts.forEach((img, i) => {
+  img.src = santaPreviewImages[i];
+
+  img.onclick = () => {
+    opts.forEach(o => o.classList.remove("selected"));
     img.classList.add("selected");
 
-    if(i===0){
-      randomMode=true;
-      selectedSanta=0;
-    }else{
-      randomMode=false;
-      selectedSanta=i;
+    if (i === 0) {
+      // 🎲 modo random
+      randomMode = true;
+      selectedSanta = 0;
+    } else {
+      randomMode = false;
+      selectedSanta = i; // 1, 2 o 3
     }
   };
 });
+
 opts[0].classList.add("selected");
+randomMode = true;
+selectedSanta = 0;
 
 /* START */
-startBtn.onclick=()=>{
+startBtn.onclick = () => {
   startMusic();
-  startBtn.disabled=true;
+  startBtn.disabled = true;
 
-  requestAnimationFrame(()=>{
-    startMenu.style.display="none";
+  requestAnimationFrame(() => {
+    startMenu.style.display = "none";
 
     let index;
-    if(randomMode){
-      index=Math.floor(Math.random()*santaGameImages.length);
-    }else{
-      index=selectedSanta-1;
-    }
-    santaImg.src=santaGameImages[index];
 
-    started=true;
+    if (randomMode) {
+      // 🎲 SIEMPRE genera 0, 1 o 2
+      index = Math.floor(Math.random() * santaGameImages.length);
+    } else {
+      // 1 → 0, 2 → 1, 3 → 2
+      index = selectedSanta - 1;
+    }
+
+    // 🔒 seguridad extra
+    if (index < 0 || index >= santaGameImages.length) {
+      index = 0;
+    }
+
+    santaImg.src = santaGameImages[index]; // 👈 OBLIGATORIO
+
+    started = true;
     resetGame();
-    interval=setInterval(createIceberg,1800);
+    interval = setInterval(createIceberg, 1800);
   });
 };
+
 </script>
 </body>
 </html>
+
