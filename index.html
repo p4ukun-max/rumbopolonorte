@@ -103,35 +103,28 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
-/* ===== CANVAS (MÓVIL ONLY) ===== */
+/* ===== CANVAS (RETINA MÓVIL) ===== */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-ctx.imageSmoothingEnabled = true;
-ctx.imageSmoothingQuality = "high";
-  
-let screenW, screenH;
+
 function resize(){
-  const dpr = Math.min(window.devicePixelRatio || 1, 2); // límite seguro
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = innerWidth;
+  const h = innerHeight;
 
-  screenW = innerWidth;
-  screenH = innerHeight;
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
 
-  // tamaño real en pantalla
-  canvas.style.width  = screenW + "px";
-  canvas.style.height = screenH + "px";
-
-  // tamaño interno en alta resolución
-  canvas.width  = Math.floor(screenW * dpr);
-  canvas.height = Math.floor(screenH * dpr);
-
-  // escalamos el contexto UNA sola vez
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  // suavizado real
+  ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-}
 
+  screenW = w;
+  screenH = h;
+}
+let screenW, screenH;
 resize();
 addEventListener("resize", resize);
 
@@ -140,19 +133,19 @@ let music=null, victoryMusic=null, audioUnlocked=false;
 
 function startMusic(){
   if(audioUnlocked) return;
-  music = new Audio("christmas.mp3");
-  music.loop = true;
-  music.volume = 0.4;
+  music=new Audio("christmas.mp3");
+  music.loop=true;
+  music.volume=0.4;
   music.play().then(()=>audioUnlocked=true).catch(()=>{});
 }
 function playVictoryMusic(){
   if(music){ music.pause(); music.currentTime=0; }
-  victoryMusic = new Audio("victory.mp3");
-  victoryMusic.volume = 0.5;
+  victoryMusic=new Audio("victory.mp3");
+  victoryMusic.volume=0.5;
   victoryMusic.play().catch(()=>{});
 }
 
-/* ===== IMÁGENES (NO TOCADAS) ===== */
+/* ===== IMÁGENES (URLS INTACTAS) ===== */
 const santaImg=new Image();
 const icebergImg=new Image();
 const finalImg=new Image();
@@ -236,13 +229,13 @@ function drawAurora(){
 }
 
 /* ===== JUEGO ===== */
-const santa={x:60,y:0,w:0,h:0,vel:0};
+const santa={x:60,y:0,w:120,h:90,vel:0};
 let pipes=[], gifts=[];
 let started=false, finished=false, passed=0, interval=null;
 
 function createIceberg(){
   if(finished) return;
-  const gap=200;
+  const gap=230;
   const top=Math.random()*(screenH-gap-140)+70;
   pipes.push({x:screenW,w:60,top,bottom:top+gap,passed:false});
 }
@@ -269,27 +262,24 @@ function resetGame(){
 function update(){
   if(!started) return;
 
-  santa.vel+=0.4;
+  santa.vel+=0.35;
   santa.y+=santa.vel;
 
   pipes.forEach(p=>{
     p.x-=2.2;
 
-    const marginX = santa.w * 0.25;
-const marginY = santa.h * 0.25;
+    const mx=santa.w*0.25;
+    const my=santa.h*0.25;
+    const x1=santa.x+mx;
+    const x2=santa.x+santa.w-mx;
+    const y1=santa.y+my;
+    const y2=santa.y+santa.h-my;
 
-const hitX1 = santa.x + marginX;
-const hitX2 = santa.x + santa.w - marginX;
-const hitY1 = santa.y + marginY;
-const hitY2 = santa.y + santa.h - marginY;
-
-if(!finished &&
-  hitX2 > p.x &&
-  hitX1 < p.x + p.w &&
-  (hitY1 < p.top || hitY2 > p.bottom)
-){
-  resetGame();
-}
+    if(!finished &&
+       x2>p.x && x1<p.x+p.w &&
+       (y1<p.top || y2>p.bottom)){
+      resetGame();
+    }
 
     if(!p.passed && p.x+p.w<santa.x){
       p.passed=true;
@@ -331,8 +321,6 @@ function draw(){
   });
 
   if(started && assetsReady){
-    santa.w=120;
-    santa.h=90;
     ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
   }
 
@@ -356,8 +344,11 @@ addEventListener("pointerdown",()=>{
   if(started && !finished) santa.vel=-7;
 });
 
-/* SELECTOR (FIXED) */
+/* ===== SELECTOR (RANDOM FIX) ===== */
+let randomMode=true;
+let selectedSanta=0;
 const opts=document.querySelectorAll(".santaOptions img");
+
 opts.forEach((img,i)=>{
   img.src=santaPreviewImages[i];
   img.onclick=()=>{
@@ -365,9 +356,11 @@ opts.forEach((img,i)=>{
     img.classList.add("selected");
 
     if(i===0){
-      santaImg.src = santaGameImages[Math.floor(Math.random()*santaGameImages.length)];
+      randomMode=true;
+      selectedSanta=0;
     }else{
-      santaImg.src = santaGameImages[(i-1) % santaGameImages.length];
+      randomMode=false;
+      selectedSanta=i;
     }
   };
 });
@@ -380,6 +373,15 @@ startBtn.onclick=()=>{
 
   requestAnimationFrame(()=>{
     startMenu.style.display="none";
+
+    let index;
+    if(randomMode){
+      index=Math.floor(Math.random()*santaGameImages.length);
+    }else{
+      index=selectedSanta-1;
+    }
+    santaImg.src=santaGameImages[index];
+
     started=true;
     resetGame();
     interval=setInterval(createIceberg,1800);
@@ -388,5 +390,3 @@ startBtn.onclick=()=>{
 </script>
 </body>
 </html>
-
-
