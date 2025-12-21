@@ -111,11 +111,27 @@ ctx.imageSmoothingQuality = "high";
   
 let screenW, screenH;
 function resize(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2); // límite seguro
+
   screenW = innerWidth;
   screenH = innerHeight;
-  canvas.width = screenW;
-  canvas.height = screenH;
+
+  // tamaño real en pantalla
+  canvas.style.width  = screenW + "px";
+  canvas.style.height = screenH + "px";
+
+  // tamaño interno en alta resolución
+  canvas.width  = Math.floor(screenW * dpr);
+  canvas.height = Math.floor(screenH * dpr);
+
+  // escalamos el contexto UNA sola vez
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // suavizado real
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
 }
+
 resize();
 addEventListener("resize", resize);
 
@@ -372,4 +388,5 @@ startBtn.onclick=()=>{
 </script>
 </body>
 </html>
+
 
