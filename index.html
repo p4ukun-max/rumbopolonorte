@@ -106,7 +106,9 @@ canvas{display:block}
 /* ===== CANVAS (MÓVIL ONLY) ===== */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
+  
 let screenW, screenH;
 function resize(){
   screenW = innerWidth;
@@ -257,12 +259,21 @@ function update(){
   pipes.forEach(p=>{
     p.x-=2.2;
 
-    if(!finished &&
-       santa.x+santa.w>p.x &&
-       santa.x<p.x+p.w &&
-       (santa.y<p.top || santa.y+santa.h>p.bottom)){
-      resetGame();
-    }
+    const marginX = santa.w * 0.25;
+const marginY = santa.h * 0.25;
+
+const hitX1 = santa.x + marginX;
+const hitX2 = santa.x + santa.w - marginX;
+const hitY1 = santa.y + marginY;
+const hitY2 = santa.y + santa.h - marginY;
+
+if(!finished &&
+  hitX2 > p.x &&
+  hitX1 < p.x + p.w &&
+  (hitY1 < p.top || hitY2 > p.bottom)
+){
+  resetGame();
+}
 
     if(!p.passed && p.x+p.w<santa.x){
       p.passed=true;
@@ -361,3 +372,4 @@ startBtn.onclick=()=>{
 </script>
 </body>
 </html>
+
