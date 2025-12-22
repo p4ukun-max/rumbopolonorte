@@ -15,7 +15,6 @@ html,body{
 }
 canvas{display:block}
 
-/* ===== LOADING ===== */
 #loadingScreen{
   position:fixed;
   inset:0;
@@ -37,7 +36,6 @@ canvas{display:block}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ===== MENÚ (UNA VEZ) ===== */
 #startMenu{
   position:fixed;
   inset:0;
@@ -90,14 +88,12 @@ canvas{display:block}
 
 <div id="startMenu">
   <h1>🎄 Rumbo al Polo Norte ✨</h1>
-
   <div class="santaOptions">
     <div class="santaOption"><img><span>Aleatorio</span></div>
     <div class="santaOption"><img><span>Boris</span></div>
     <div class="santaOption"><img><span>Lluna</span></div>
     <div class="santaOption"><img><span>Pitufa</span></div>
   </div>
-
   <button id="startBtn" disabled>Iniciar Juego</button>
 </div>
 
@@ -105,54 +101,53 @@ canvas{display:block}
 
 <script>
 /* ===== CANVAS ===== */
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 let W,H;
 
 function resize(){
-  const dpr = Math.min(devicePixelRatio||1,2);
-  W = innerWidth;
-  H = innerHeight;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = W+"px";
-  canvas.style.height = H+"px";
+  const dpr=Math.min(devicePixelRatio||1,2);
+  W=innerWidth; H=innerHeight;
+  canvas.width=W*dpr;
+  canvas.height=H*dpr;
+  canvas.style.width=W+"px";
+  canvas.style.height=H+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 resize();
 addEventListener("resize",resize);
 
 /* ===== AUDIO ===== */
-let music=null;
+let music=null, victoryMusic=null, victoryPlayed=false;
 function startMusic(){
   if(music) return;
-  music = new Audio("christmas.mp3");
-  music.loop = true;
-  music.volume = 0.4;
+  music=new Audio("christmas.mp3");
+  music.loop=true;
+  music.volume=0.4;
   music.play().catch(()=>{});
+}
+function playVictoryMusic(){
+  if(victoryPlayed) return;
+  victoryPlayed=true;
+  music?.pause();
+  victoryMusic=new Audio("victory.mp3");
+  victoryMusic.volume=0.6;
+  victoryMusic.play().catch(()=>{});
 }
 
 /* ===== IMÁGENES ===== */
-const preview=[
-  "https://www.dropbox.com/scl/fi/9wfq8we1wn0kdrnjxz52x/random.png?dl=1",
-  "https://www.dropbox.com/scl/fi/njdnkyqh8vfr0skbgt3f5/boris.png?dl=1",
-  "https://www.dropbox.com/scl/fi/kmh8kxrpmfbqekxhnmbga/lluna.png?dl=1",
-  "https://www.dropbox.com/scl/fi/l01xkq152sww7j6kat85c/pitufa.png?dl=1"
-];
-
-const santas=[
-  "https://www.dropbox.com/scl/fi/h4usenwnm66m3s4mbpgsj/trineo_1.png?dl=1",
-  "https://www.dropbox.com/scl/fi/05dnhea63myd1guwnotqi/trineo_3.png?dl=1",
-  "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_2.png?dl=1"
-];
+const preview=[/* tus previews */];
+const santas=[/* tus sprites */];
 
 const santaImg=new Image();
 const icebergImg=new Image();
+const finalImg=new Image();
 icebergImg.src="https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?dl=1";
+finalImg.src="https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?dl=1";
 
 /* ===== PRECARGA ===== */
 let loaded=0;
-const total=preview.length+santas.length+1;
+const total=preview.length+santas.length+2;
 function assetLoaded(){
   loaded++;
   if(loaded>=total){
@@ -160,7 +155,7 @@ function assetLoaded(){
     startBtn.disabled=false;
   }
 }
-[...preview,...santas,icebergImg.src].forEach(src=>{
+[...preview,...santas,icebergImg.src,finalImg.src].forEach(src=>{
   const i=new Image();
   i.onload=i.onerror=assetLoaded;
   i.src=src;
@@ -178,26 +173,28 @@ opts.forEach((img,i)=>{
   };
 });
 opts[0].classList.add("selected");
-
 function getSantaSprite(i){
   if(i===0) return santas[Math.floor(Math.random()*3)];
   return santas[i-1];
 }
 
 /* ===== JUEGO ===== */
-const santa={x:60,y:0,w:120,h:90,vel:0};
+const santa={x:60,y:H/2,w:120,h:90,vel:0,drag:false};
 let pipes=[], started=false, passed=0;
 let icebergInterval=null;
+let finished=false;
+let finalX,finalY,finalW=300,finalH=300;
+let santaPlaced=false;
 
 /* ===== ICEBERGS ===== */
 function createIceberg(){
-  if(!started) return;
-  const gap=230;
-  const top=Math.random()*(H-gap-120)+60;
-  pipes.push({x:W,w:60,top,bottom:top+gap});
+  if(finished) return;
+  const gap=260;
+  const top=Math.random()*(H-gap-200)+100;
+  pipes.push({x:W,w:60,top,bottom:top+gap,passed:false});
 }
 
-/* ===== COLISIONES ===== */
+/* ===== COLISIÓN ===== */
 function checkCollision(){
   if(santa.y<0 || santa.y+santa.h>H) return true;
   for(const p of pipes){
@@ -210,10 +207,13 @@ function checkCollision(){
   return false;
 }
 
-/* ===== RESET PARTIDA (SIN MENÚ) ===== */
+/* ===== RESET ===== */
 function resetGame(){
   pipes=[];
   passed=0;
+  finished=false;
+  victoryPlayed=false;
+  santaPlaced=false;
   santa.y=H/2;
   santa.vel=0;
 }
@@ -222,16 +222,31 @@ function resetGame(){
 function update(){
   if(!started) return;
 
-  santa.vel+=0.35;
-  santa.y+=santa.vel;
+  if(!santa.drag && !santaPlaced){
+    santa.vel+=0.25; // gravedad más justa
+    santa.y+=santa.vel;
+  }
 
-  if(checkCollision()){
+  if(!finished && checkCollision()){
     resetGame();
     return;
   }
 
-  pipes.forEach(p=>p.x-=2.2);
-  pipes=pipes.filter(p=>p.x+p.w>0);
+  pipes.forEach(p=>{
+    p.x-=2;
+    if(!p.passed && p.x+p.w<santa.x){
+      p.passed=true;
+      passed++;
+      if(passed>=5){
+        finished=true;
+        playVictoryMusic();
+        clearInterval(icebergInterval);
+        pipes=[];
+        finalX=W/2-finalW/2;
+        finalY=H/2-finalH/2;
+      }
+    }
+  });
 }
 
 function draw(){
@@ -247,6 +262,10 @@ function draw(){
     ctx.restore();
   });
 
+  if(finished){
+    ctx.drawImage(finalImg,finalX,finalY,finalW,finalH);
+  }
+
   ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
 }
 
@@ -257,18 +276,42 @@ function draw(){
 })();
 
 /* ===== INPUT ===== */
-addEventListener("pointerdown",()=>{
-  if(started) santa.vel=-7;
+addEventListener("pointerdown",e=>{
+  if(finished){
+    santa.drag=true;
+  }else if(started){
+    santa.vel=-6;
+  }
+});
+addEventListener("pointermove",e=>{
+  if(santa.drag){
+    santa.x=e.clientX-santa.w/2;
+    santa.y=e.clientY-santa.h/2;
+  }
+});
+addEventListener("pointerup",()=>{
+  if(santa.drag){
+    santa.drag=false;
+    if(
+      santa.x+santa.w/2>finalX &&
+      santa.x+santa.w/2<finalX+finalW &&
+      santa.y+santa.h/2>finalY &&
+      santa.y+santa.h/2<finalY+finalH
+    ){
+      santaPlaced=true;
+      santa.x=finalX+finalW/2-santa.w/2;
+      santa.y=finalY-santa.h/2;
+    }
+  }
 });
 
-/* ===== START (UNA VEZ) ===== */
+/* ===== START ===== */
 startBtn.onclick=()=>{
   startMusic();
   startMenu.style.display="none";
   santaImg.src=getSantaSprite(selected);
   resetGame();
   started=true;
-
   if(icebergInterval) clearInterval(icebergInterval);
   icebergInterval=setInterval(createIceberg,1800);
 };
