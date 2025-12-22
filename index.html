@@ -15,7 +15,6 @@ html,body{
 }
 canvas{display:block}
 
-/* LOADING */
 #loadingScreen{
   position:fixed;
   inset:0;
@@ -24,12 +23,11 @@ canvas{display:block}
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  z-index:30;
+  z-index:50;
   color:white;
 }
 .spinner{
-  width:48px;
-  height:48px;
+  width:48px;height:48px;
   border:5px solid rgba(255,255,255,.2);
   border-top-color:#7fffd4;
   border-radius:50%;
@@ -38,48 +36,36 @@ canvas{display:block}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* MENU */
 #startMenu{
   position:fixed;
   inset:0;
-  padding:20px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  z-index:10;
   color:white;
-  text-align:center;
+  z-index:20;
 }
-#startMenu h1{
-  font-size:32px;
-  margin-bottom:20px;
-  text-shadow:0 0 15px #7fffd4;
-}
-
-/* SELECTOR */
 .santaOptions{
   display:flex;
   gap:14px;
-  margin-bottom:26px;
+  margin-bottom:24px;
 }
 .santaOptions img{
   width:60px;
   padding:4px;
   border-radius:14px;
   cursor:pointer;
-  background:rgba(255,255,255,.12);
+  background:rgba(255,255,255,.15);
 }
 .santaOptions img.selected{
-  background:rgba(255,255,255,.9);
-  box-shadow:0 0 18px #7fffd4;
+  background:white;
+  box-shadow:0 0 16px #7fffd4;
 }
-
-/* BUTTON */
 #startBtn{
   font-size:20px;
   padding:14px 36px;
-  border-radius:32px;
+  border-radius:30px;
   border:none;
 }
 </style>
@@ -89,11 +75,11 @@ canvas{display:block}
 
 <div id="loadingScreen">
   <div class="spinner"></div>
-  <p>Cargando magia navideña… 🎄✨</p>
+  <p>Cargando magia navideña…</p>
 </div>
 
 <div id="startMenu">
-  <h1>❄️ Rumbo al Polo Norte 🏔️</h1>
+  <h1>🎄 Rumbo al Polo Norte ✨</h1>
   <div class="santaOptions">
     <img><img><img><img>
   </div>
@@ -103,268 +89,244 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
-/* ===== CANVAS (RETINA MÓVIL) ===== */
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+/* ===== CANVAS ===== */
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+let W,H;
+let finalX, finalY, finalW = 400, finalH = 400;
+let finalCurrentY;
+let finalArrived = false;
 
 function resize(){
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = innerWidth;
-  const h = innerHeight;
-
-  canvas.style.width = w + "px";
-  canvas.style.height = h + "px";
-  canvas.width = Math.floor(w * dpr);
-  canvas.height = Math.floor(h * dpr);
-
+  const dpr=Math.min(devicePixelRatio||1,2);
+  W=innerWidth; H=innerHeight;
+  canvas.width=W*dpr;
+  canvas.height=H*dpr;
+  canvas.style.width=W+"px";
+  canvas.style.height=H+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-
-  screenW = w;
-  screenH = h;
 }
-let screenW, screenH;
 resize();
-addEventListener("resize", resize);
+addEventListener("resize",resize);
 
 /* ===== AUDIO ===== */
-let music=null, victoryMusic=null, audioUnlocked=false;
+let music=null;
+let victoryMusic=null;
+let victoryPlayed=false;
 
 function startMusic(){
-  if(audioUnlocked) return;
+  if(music) return;
   music=new Audio("christmas.mp3");
   music.loop=true;
   music.volume=0.4;
-  music.play().then(()=>audioUnlocked=true).catch(()=>{});
+  music.play().catch(()=>{});
 }
+
 function playVictoryMusic(){
+  if(victoryPlayed) return;
+  victoryPlayed=true;
   if(music){ music.pause(); music.currentTime=0; }
   victoryMusic=new Audio("victory.mp3");
   victoryMusic.volume=0.5;
   victoryMusic.play().catch(()=>{});
 }
 
-/* ===== IMÁGENES (URLS INTACTAS) ===== */
+/* ===== IMÁGENES ===== */
 const santaImg=new Image();
 const icebergImg=new Image();
 const finalImg=new Image();
 
-const santaPreviewImages=[
-  "https://www.dropbox.com/scl/fi/9wfq8we1wn0kdrnjxz52x/random.png?rlkey=ls3zowk6kued1v1jw4cryqpsq&st=wudgp52c&dl=1",
-  "https://www.dropbox.com/scl/fi/njdnkyqh8vfr0skbgt3f5/boris.png?rlkey=60d8i2gjcato556v9t43ajatm&st=wxv9k7cs&dl=1",
-  "https://www.dropbox.com/scl/fi/kmh8kxrpmfbqekxhnmbga/lluna.png?rlkey=96fqlv18dkmfnbwumitzswdjd&st=ui4log4o&dl=1",
-  "https://www.dropbox.com/scl/fi/l01xkq152sww7j6kat85c/pitufa.png?rlkey=93p5098lqfkgvfet9oo6oze0l&st=skuxk9x4&dl=1"
+/* PREVIEW */
+const preview=[
+  "https://www.dropbox.com/scl/fi/9wfq8we1wn0kdrnjxz52x/random.png?dl=1",
+  "https://www.dropbox.com/scl/fi/njdnkyqh8vfr0skbgt3f5/boris.png?dl=1",
+  "https://www.dropbox.com/scl/fi/kmh8kxrpmfbqekxhnmbga/lluna.png?dl=1",
+  "https://www.dropbox.com/scl/fi/l01xkq152sww7j6kat85c/pitufa.png?dl=1"
 ];
 
-const santaGameImages=[
-  "https://www.dropbox.com/scl/fi/h4usenwnm66m3s4mbpgsj/trineo_1.png?rlkey=pc6ou62aiu5216c1ihhc2875e&st=m336zbwp&dl=1",
-  "https://www.dropbox.com/scl/fi/05dnhea63myd1guwnotqi/trineo_3.png?rlkey=rnjdap710lpar3o2ot79eh89p&st=yogg44ow&dl=1",
-  "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_2.png?rlkey=06psxs9942im1y7usdg0qgczb&st=mnb73xe4&dl=1"
+const santas=[
+  "https://www.dropbox.com/scl/fi/h4usenwnm66m3s4mbpgsj/trineo_1.png?dl=1",
+  "https://www.dropbox.com/scl/fi/05dnhea63myd1guwnotqi/trineo_3.png?dl=1",
+  "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_2.png?dl=1"
 ];
 
-icebergImg.src="https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=6cffxunf&dl=1";
-finalImg.src="https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=48f5n9oi&dl=1";
+icebergImg.src="https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?dl=1";
+finalImg.src="https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?dl=1";
 
 /* ===== PRECARGA ===== */
-let assetsReady=false;
-(function preload(){
-  let loaded=0;
-  const list=[...santaPreviewImages,...santaGameImages,icebergImg.src,finalImg.src];
-  list.forEach(src=>{
-    const i=new Image();
-    i.onload=i.onerror=()=>{
-      loaded++;
-      if(loaded>=list.length){
-        assetsReady=true;
-        loadingScreen.style.display="none";
-        startBtn.disabled=false;
-      }
-    };
-    i.src=src;
-  });
-})();
+let loaded=0;
+const total=preview.length+santas.length+2;
 
-/* ===== NIEVE ===== */
-let snow=[];
-function initSnow(){
-  snow=[];
-  for(let i=0;i<70;i++){
-    snow.push({
-      x:Math.random()*screenW,
-      y:Math.random()*screenH,
-      r:Math.random()*2+1,
-      s:Math.random()*1.2+0.4
-    });
+function assetLoaded(){
+  loaded++;
+  if(loaded>=total){
+    loadingScreen.style.display="none";
+    startBtn.disabled=false;
   }
 }
-initSnow();
+[...preview,...santas,icebergImg.src,finalImg.src].forEach(src=>{
+  const i=new Image();
+  i.onload=i.onerror=assetLoaded;
+  i.src=src;
+});
 
+/* ===== AURORA ===== */
+let aurora = false;
+let auroraAlpha = 0;
+let auroraT = 0;
+let auroraState = "fadeIn";
+let auroraTimer = 0;
+let auroraBaseY = 0;
+
+setInterval(()=>{
+  aurora = true;
+  auroraAlpha = 0;
+  auroraState = "fadeIn";
+  auroraTimer = 0;
+  auroraBaseY = H * (0.08 + Math.random() * 0.35); // 👈 VARIACIÓN REAL
+}, 7000);
+
+function drawAurora(){
+  if(!aurora) return;
+
+  auroraT += 0.015;
+
+  /* ---- CONTROL DE FASES ---- */
+  if(auroraState === "fadeIn"){
+    auroraAlpha += 0.01;
+    if(auroraAlpha >= 0.7){
+      auroraAlpha = 0.7;
+      auroraState = "visible";
+    }
+  }
+  else if(auroraState === "visible"){
+    auroraTimer++;
+    if(auroraTimer > 180){ // ~3 segundos
+      auroraState = "fadeOut";
+    }
+  }
+  else if(auroraState === "fadeOut"){
+    auroraAlpha -= 0.006;
+    if(auroraAlpha <= 0){
+      auroraAlpha = 0;
+      aurora = false;
+      return;
+    }
+  }
+
+  const topY = auroraBaseY;
+  const height = H * 0.35;
+  const bottomY = topY + height;
+
+  ctx.save();
+  ctx.globalAlpha = auroraAlpha;
+
+  const grd = ctx.createLinearGradient(0, topY, 0, bottomY);
+  grd.addColorStop(0, "rgba(120,255,200,.45)");
+  grd.addColorStop(1, "rgba(180,120,255,.05)");
+  ctx.fillStyle = grd;
+
+  ctx.beginPath();
+
+  /* ---- BORDE SUPERIOR ---- */
+  ctx.moveTo(0, topY);
+  for(let x = 0; x <= W; x += 10){
+    ctx.lineTo(
+      x,
+      topY + Math.sin(x * 0.01 + auroraT) * 35
+    );
+  }
+
+  /* ---- BORDE INFERIOR ---- */
+  for(let x = W; x >= 0; x -= 10){
+    ctx.lineTo(
+      x,
+      bottomY + Math.sin(x * 0.008 + auroraT + 2) * 25
+    );
+  }
+
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+/* ===== NIEVE ===== */
+const snow=[];
+for(let i=0;i<80;i++){
+  snow.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2+1,s:Math.random()*1.2+.4});
+}
 function drawSnow(){
   ctx.fillStyle="white";
   snow.forEach(f=>{
     f.y+=f.s;
-    if(f.y>screenH){
-      f.y=-10;
-      f.x=Math.random()*screenW;
-    }
+    if(f.y>H){f.y=-10;f.x=Math.random()*W;}
     ctx.beginPath();
     ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
     ctx.fill();
   });
 }
 
-/* ===== AURORA ===== */
-let auroraT = 0;
-let auroraVisible = false;
-let auroraTimer = 0;
-setInterval(() => {
-  if (!auroraVisible && Math.random() < 0.4) {
-    auroraVisible = true;
-    auroraTimer = 0;
-  }
-}, 6000);
-function drawAurora(){
-  if(!auroraVisible) return;
-
-  auroraT += 0.01;
-  auroraTimer++;
-
-  if(auroraTimer > 240){ // ~4 segundos
-    auroraVisible = false;
-    return;
-  }
-
-  const h = screenH * 0.35;
-  const step = 10;
-
-  //Verde
-  ctx.fillStyle = "rgba(120,255,200,0.22)";
-  ctx.beginPath();
-  ctx.moveTo(0,0);
-  for(let x=0;x<=screenW;x+=step){
-    ctx.lineTo(
-      x,
-      h*0.4 + Math.sin(x*0.01 + auroraT)*25
-    );
-  }
-  ctx.lineTo(screenW,0);
-  ctx.fill();
-
-  //Violeta
-  ctx.fillStyle = "rgba(180,130,255,0.18)";
-  ctx.beginPath();
-  ctx.moveTo(0,0);
-  for(let x=0;x<=screenW;x+=step){
-    ctx.lineTo(
-      x,
-      h*0.25 + Math.sin(x*0.013 - auroraT*1.3)*20
-    );
-  }
-  ctx.lineTo(screenW,0);
-  ctx.fill();
-}
-//AIRE
-
-let windSound = null;
-
-function playWind(){
-  if(Math.random() < 0.35){ // no siempre
-    windSound = new Audio("wind.mp3"); // usa tu archivo
-    windSound.volume = 0.25;
-    windSound.play().catch(()=>{});
-  }
-}
-setInterval(() => {
-  if(started && !finished){
-    playWind();
-  }
-}, 8000);
 /* ===== JUEGO ===== */
-const santa={x:60,y:0,w:120,h:90,vel:0};
-let pipes=[], gifts=[];
-let started=false, finished=false, passed=0, interval=null;
+const santa={x:60,y:H/2,w:120,h:90,vel:0};
+let pipes=[], started=false, finished=false, passed=0;
 
 function createIceberg(){
   if(finished) return;
   const gap=230;
-  const top=Math.random()*(screenH-gap-140)+70;
-  pipes.push({x:screenW,w:60,top,bottom:top+gap,passed:false});
-}
-
-function dropGift(){
-  gifts.push({
-    x:santa.x+santa.w*0.5,
-    y:santa.y+santa.h*0.9,
-    tx:screenW/2,
-    ty:screenH*0.75,
-    p:0
-  });
+  const top=Math.random()*(H-gap-120)+60;
+  pipes.push({x:W,w:60,top,bottom:top+gap,passed:false});
 }
 
 function resetGame(){
   pipes=[];
-  gifts=[];
   passed=0;
   finished=false;
-  santa.y=screenH/2;
+  victoryPlayed=false;
+  santa.y=H/2;
   santa.vel=0;
 }
 
 function update(){
-  if(!started) return;
+  if(!started || finished) return;
 
   santa.vel+=0.35;
   santa.y+=santa.vel;
 
   pipes.forEach(p=>{
     p.x-=2.2;
-
-    const mx=santa.w*0.25;
-    const my=santa.h*0.25;
-    const x1=santa.x+mx;
-    const x2=santa.x+santa.w-mx;
-    const y1=santa.y+my;
-    const y2=santa.y+santa.h-my;
-
-    if(!finished &&
-       x2>p.x && x1<p.x+p.w &&
-       (y1<p.top || y2>p.bottom)){
-      resetGame();
-    }
-
     if(!p.passed && p.x+p.w<santa.x){
       p.passed=true;
       passed++;
-      if(passed>=5){
-        finished=true;
-        clearInterval(interval);
-        playVictoryMusic();
-        interval=setInterval(dropGift,280);
-      }
+      if(passed >= 5 && !finished){
+		  finished = true;
+		  playVictoryMusic();
+
+		  finalX = W/2 - finalW/2;
+		  finalY = H/2 - finalH/2;
+
+		  finalCurrentY = H;
+		  finalArrived = false;
+	  }
     }
   });
-
   pipes=pipes.filter(p=>p.x+p.w>0);
-
-  if(finished){
-    gifts.forEach(g=>{
-      g.p+=0.02;
-      g.x+=(g.tx-g.x)*g.p;
-      g.y+=(g.ty-g.y)*g.p;
-    });
-  }
+  /* ---- ANIMACIÓN DE LA IMAGEN FINAL ---- */
+	if(finished && !finalArrived){
+	  finalCurrentY -= 4;   // velocidad de subida
+	  if(finalCurrentY <= finalY){
+		finalCurrentY = finalY;
+		finalArrived = true;
+	  }
+	}
 }
 
 function draw(){
   ctx.fillStyle="#061526";
-  ctx.fillRect(0,0,screenW,screenH);
-
+  ctx.fillRect(0,0,W,H);
   drawAurora();
   drawSnow();
 
   pipes.forEach(p=>{
-    ctx.drawImage(icebergImg,p.x,p.bottom,p.w,screenH-p.bottom);
+    ctx.drawImage(icebergImg,p.x,p.bottom,p.w,H-p.bottom);
     ctx.save();
     ctx.translate(p.x,p.top);
     ctx.scale(1,-1);
@@ -372,17 +334,20 @@ function draw(){
     ctx.restore();
   });
 
-  if(started && assetsReady){
-    ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
-  }
+  ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
 
   if(finished){
-    const fh=screenH*0.22;
-    const fw=finalImg.naturalWidth*(fh/finalImg.naturalHeight);
-    ctx.drawImage(finalImg,screenW/2-fw/2,screenH-fh,fw,fh);
-    ctx.font="24px serif";
-    gifts.forEach(g=>ctx.fillText("🎁",g.x,g.y));
-  }
+	  ctx.fillStyle = "rgba(0,0,0,.35)";
+	  ctx.fillRect(0,0,W,H);
+
+	  ctx.drawImage(
+		finalImg,
+		finalX,
+		finalCurrentY,
+		finalW,
+		finalH
+	  );
+	}
 }
 
 (function loop(){
@@ -391,67 +356,32 @@ function draw(){
   requestAnimationFrame(loop);
 })();
 
-/* INPUT */
 addEventListener("pointerdown",()=>{
   if(started && !finished) santa.vel=-7;
 });
 
-/* ===== SELECTOR (RANDOM FIX) ===== */
-const opts = document.querySelectorAll(".santaOptions img");
-
-opts.forEach((img, i) => {
-  img.src = santaPreviewImages[i];
-
-  img.onclick = () => {
-    opts.forEach(o => o.classList.remove("selected"));
+/* SELECTOR */
+const opts=document.querySelectorAll(".santaOptions img");
+opts.forEach((img,i)=>{
+  img.src=preview[i];
+  img.onclick=()=>{
+    opts.forEach(o=>o.classList.remove("selected"));
     img.classList.add("selected");
-
-    if (i === 0) {
-      // 🎲 modo random
-      randomMode = true;
-      selectedSanta = 0;
-    } else {
-      randomMode = false;
-      selectedSanta = i; // 1, 2 o 3
-    }
+    selected=i;
   };
 });
-
 opts[0].classList.add("selected");
-randomMode = true;
-selectedSanta = 0;
+let selected=0;
 
 /* START */
-startBtn.onclick = () => {
+startBtn.onclick=()=>{
   startMusic();
-  startBtn.disabled = true;
-
-  requestAnimationFrame(() => {
-    startMenu.style.display = "none";
-
-    let index;
-
-    if (randomMode) {
-      // 🎲 SIEMPRE genera 0, 1 o 2
-      index = Math.floor(Math.random() * santaGameImages.length);
-    } else {
-      // 1 → 0, 2 → 1, 3 → 2
-      index = selectedSanta - 1;
-    }
-
-    // 🔒 seguridad extra
-    if (index < 0 || index >= santaGameImages.length) {
-      index = 0;
-    }
-
-    santaImg.src = santaGameImages[index]; // 👈 OBLIGATORIO
-
-    started = true;
-    resetGame();
-    interval = setInterval(createIceberg, 1800);
-  });
+  startMenu.style.display="none";
+  santaImg.src=santas[Math.floor(Math.random()*santas.length)];
+  started=true;
+  resetGame();
+  setInterval(createIceberg,1800);
 };
-
 </script>
 </body>
 </html>
