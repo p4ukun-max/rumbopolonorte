@@ -372,11 +372,18 @@ opts.forEach((img,i)=>{
 opts[0].classList.add("selected");
 let selected=0;
 
+function getSantaSprite(index){
+  if(index === 0){
+    // aleatorio entre 0 y 2
+    return santas[Math.floor(Math.random() * 3)];
+  }
+  return santas[index - 1];
+}
 /* START */
 startBtn.onclick=()=>{
   startMusic();
   startMenu.style.display="none";
-  santaImg.src=santas[Math.floor(Math.random()*santas.length)];
+  santaImg.src= getSantaSprite(selected);
   started=true;
   resetGame();
   setInterval(createIceberg,1800);
