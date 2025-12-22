@@ -68,6 +68,34 @@ canvas{display:block}
   border-radius:30px;
   border:none;
 }
+.santaOption{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  color:white;
+  font-size:14px;
+}
+
+.santaOption span{
+  opacity:.85;
+  user-select:none;
+}
+
+.santaOptions img{
+  width:60px;
+  padding:4px;
+  border-radius:14px;
+  cursor:pointer;
+  background:rgba(255,255,255,.15);
+  transition:.2s;
+}
+
+.santaOptions img.selected{
+  background:white;
+  box-shadow:0 0 16px #7fffd4;
+}
+
 </style>
 </head>
 
@@ -81,8 +109,23 @@ canvas{display:block}
 <div id="startMenu">
   <h1>🎄 Rumbo al Polo Norte ✨</h1>
   <div class="santaOptions">
-    <img><img><img><img>
+  <div class="santaOption">
+    <img>
+    <span>Aleatorio</span>
   </div>
+  <div class="santaOption">
+    <img>
+    <span>Boris</span>
+  </div>
+  <div class="santaOption">
+    <img>
+    <span>Lluna</span>
+  </div>
+  <div class="santaOption">
+    <img>
+    <span>Pitufa</span>
+  </div>
+</div>
   <button id="startBtn" disabled>Iniciar Juego</button>
 </div>
 
@@ -136,6 +179,7 @@ const santaImg=new Image();
 const icebergImg=new Image();
 const finalImg=new Image();
 
+/* PREVIEW */
 /* 🖼️ PREVIEW MENÚ */
 const preview = [
   "https://www.dropbox.com/scl/fi/9wfq8we1wn0kdrnjxz52x/random.png?rlkey=ls3zowk6kued1v1jw4cryqpsq&st=wudgp52c&dl=1",
@@ -360,7 +404,7 @@ addEventListener("pointerdown",()=>{
 });
 
 /* SELECTOR */
-const opts=document.querySelectorAll(".santaOptions img");
+const opts=document.querySelectorAll(".santaOption img");
 opts.forEach((img,i)=>{
   img.src=preview[i];
   img.onclick=()=>{
@@ -371,7 +415,6 @@ opts.forEach((img,i)=>{
 });
 opts[0].classList.add("selected");
 let selected=0;
-
 function getSantaSprite(index){
   if(index === 0){
     // aleatorio entre 0 y 2
@@ -391,4 +434,3 @@ startBtn.onclick=()=>{
 </script>
 </body>
 </html>
-
