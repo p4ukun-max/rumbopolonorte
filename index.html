@@ -287,17 +287,6 @@ function checkCollision() {
       santa.x + santa.w > p.x &&
       santa.x < p.x + p.w;
 
-    // 🔥 ATERRIZA SOBRE ICEBERG
-    if (
-      hitsX &&
-      santaPrevBottom <= p.top &&
-      santaBottom >= p.top
-    ) {
-      santa.y = p.top - santa.h;
-      santa.vel = 0;
-      return false; // NO es colisión mortal
-    }
-
     // 💀 COLISIÓN LATERAL / INFERIOR
     if (
       hitsX &&
@@ -422,6 +411,7 @@ startBtn.onclick=()=>{
 
 </body>
 </html>
+
 
 
 
