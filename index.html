@@ -278,26 +278,23 @@ passed=0; finished=false; santaPlaced=false; victoryPlayed=false;
 function checkCollision() {
   // límites pantalla
   if (santa.y < 0) return true;
+  if (santa.y + santa.h > H) return true;
 
   for (const p of pipes) {
-    const santaBottom = santa.y + santa.h;
-    const santaPrevBottom = santaBottom - santa.vel;
-
     const hitsX =
       santa.x + santa.w > p.x &&
       santa.x < p.x + p.w;
 
-    // 💀 COLISIÓN LATERAL / INFERIOR
-    if (
-      hitsX &&
-      (santa.y < p.top || santa.y + santa.h > p.bottom)
-    ) {
-      return true;
+    if (hitsX) {
+      // colisión arriba o abajo
+      if (
+        santa.y < p.top ||
+        santa.y + santa.h > p.bottom
+      ) {
+        return true; // 💀 MUERTE
+      }
     }
   }
-
-  // fondo pantalla
-  if (santa.y + santa.h > H) return true;
 
   return false;
 }
@@ -411,6 +408,7 @@ startBtn.onclick=()=>{
 
 </body>
 </html>
+
 
 
 
