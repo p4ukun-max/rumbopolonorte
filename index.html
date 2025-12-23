@@ -221,11 +221,16 @@ const santa={x:60,y:H/2,w:120,h:90,vel:0,drag:false};
 let pipes=[], passed=0, started=false;
 let finished=false, santaPlaced=false;
 let icebergInterval=null;
+const TOTAL_ICEBERGS = 3; // por ejemplo: 3 icebergs en total
+let finalVisible = false;
 /* ===== ICEBERGS (MÁS JUSTO) ===== */
 function createIceberg(){
-  if(finished) return;   // 👈 clave
+  if (finished) return;
+  if (pipes.length >= TOTAL_ICEBERGS) return; // 👈 no más de X
+
   const gap = 260;
   const top = Math.random() * (H - gap - 200) + 100;
+
   pipes.push({
     x: W,
     w: 60,
@@ -265,16 +270,24 @@ function update(){
 
   pipes.forEach(p=>{
     p.x-=2;
-    if(!p.passed && p.x+p.w<santa.x){
-      p.passed=true; passed++;
-      if(passed>=1){
-        finished=true;
-        playVictoryMusic();
-        clearInterval(icebergInterval);
-        pipes=[];
-		updateFinalImageLayout(); 
-      }
-    }
+    if (!p.passed && p.x + p.w < santa.x) {
+  p.passed = true;
+  passed++;
+
+  // 👉 PENÚLTIMO ICEBERG
+  if (passed === TOTAL_ICEBERGS - 1) {
+    finalVisible = true;
+    updateFinalImageLayout();
+  }
+
+  // 👉 ÚLTIMO ICEBERG → victoria
+  if (passed === TOTAL_ICEBERGS) {
+    finished = true;
+    playVictoryMusic();
+    clearInterval(icebergInterval);
+  }
+}
+
   });
 }
 
