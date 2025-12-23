@@ -90,7 +90,6 @@ function resize(){
 }
 resize(); addEventListener("resize",resize);
 let finalW, finalH, finalX, finalY;
-
 function updateFinalImageLayout(){
   finalW = Math.min(W * 0.55, 260);
   finalH = finalW * 1.1;
@@ -281,7 +280,7 @@ function draw(){
     ctx.save(); ctx.translate(p.x,p.top); ctx.scale(1,-1);
     ctx.drawImage(icebergImg,0,0,p.w,p.top); ctx.restore();
   });
-  if(started && finished){
+  if(started){
 	  ctx.drawImage(
 		finalImg,
 		finalX,
