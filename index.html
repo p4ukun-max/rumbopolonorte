@@ -128,20 +128,18 @@ finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?
 finalImg.onload = updateFinalImageLayout;
 let finalW, finalH, finalX, finalY;
 function updateFinalImageLayout() {
-  // Altura máxima: 30% de la pantalla (ajústalo si quieres)
   finalH = Math.min(H * 0.32, 260);
 
-  // Proporción real de la imagen (ajusta si tu PNG cambia)
   const aspect = finalImg.width && finalImg.height
     ? finalImg.width / finalImg.height
-    : 0.75; // fallback seguro
+    : 0.75;
 
   finalW = finalH * aspect;
 
-  // Centrado horizontal
-  finalX = (W - finalW) / 2;
+  // 👈 PEGADA A LA IZQUIERDA
+  finalX = 0;
 
-  // 🔴 PEGADO AL FONDO DEL MÓVIL
+  // 👇 pegada al fondo
   finalY = H - finalH;
 }
 
@@ -300,7 +298,7 @@ function draw(){
     ctx.save(); ctx.translate(p.x,p.top); ctx.scale(1,-1);
     ctx.drawImage(icebergImg,0,0,p.w,p.top); ctx.restore();
   });
-  if(started){
+  if (finalVisible) {
 	  ctx.drawImage(
 		finalImg,
 		finalX,
@@ -308,8 +306,7 @@ function draw(){
 		finalW,
 		finalH
 	  );
-	ctx.globalAlpha = 1;
-  }
+	}
   ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
 }
 
