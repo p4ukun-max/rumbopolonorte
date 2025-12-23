@@ -250,13 +250,44 @@ passed=0; finished=false; santaPlaced=false; victoryPlayed=false;
 }
 
 /* ===== COLISIÓN ===== */
-function checkCollision(){
-  if(santa.y<0||santa.y+santa.h>H) return true;
-  for(const p of pipes){
-    if(santa.x+santa.w>p.x&&santa.x<p.x+p.w&&(santa.y<p.top||santa.y+santa.h>p.bottom)) return true;
+function checkCollision() {
+  // límites pantalla
+  if (santa.y < 0) return true;
+
+  for (const p of pipes) {
+    const santaBottom = santa.y + santa.h;
+    const santaPrevBottom = santaBottom - santa.vel;
+
+    const hitsX =
+      santa.x + santa.w > p.x &&
+      santa.x < p.x + p.w;
+
+    // 🔥 ATERRIZA SOBRE ICEBERG
+    if (
+      hitsX &&
+      santaPrevBottom <= p.top &&
+      santaBottom >= p.top
+    ) {
+      santa.y = p.top - santa.h;
+      santa.vel = 0;
+      return false; // NO es colisión mortal
+    }
+
+    // 💀 COLISIÓN LATERAL / INFERIOR
+    if (
+      hitsX &&
+      (santa.y < p.top || santa.y + santa.h > p.bottom)
+    ) {
+      return true;
+    }
   }
+
+  // fondo pantalla
+  if (santa.y + santa.h > H) return true;
+
   return false;
 }
+
 
 /* ===== LOOP ===== */
 function update(){
@@ -357,6 +388,7 @@ startBtn.onclick=()=>{
 
 </body>
 </html>
+
 
 
 
