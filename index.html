@@ -433,6 +433,12 @@ function handleInput() {
 }
 
 startBtn.onclick = () => {
+  icebergCount = 0;
+  finalPlatform = null;
+  gameOver = false;
+  finished = false;
+  clearInterval(icebergInterval);
+  resetSanta();
   document.getElementById("startMenu").style.display = "none";
   santaImg.src = getSantaSprite();
   startMusic();
