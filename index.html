@@ -89,17 +89,6 @@ function resize(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 resize(); addEventListener("resize",resize);
-let finalW, finalH, finalX, finalY;
-function updateFinalImageLayout(){
-  finalW = Math.min(W * 0.55, 260);
-  finalH = finalW * 1.1;
-
-  finalX = W / 2 - finalW / 2;
-
-  finalY = H - finalH - H * 0.06;
-}
-updateFinalImageLayout();
-addEventListener("resize", updateFinalImageLayout);
 /* ===== AUDIO ===== */
 let music=null, victoryMusic=null, victoryPlayed=false;
 function startMusic(){
@@ -136,7 +125,28 @@ const icebergImg=new Image();
 const finalImg=new Image();
 icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=6cffxunf&dl=1";
 finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=48f5n9oi&dl=1";
+finalImg.onload = updateFinalImageLayout;
+let finalW, finalH, finalX, finalY;
+function updateFinalImageLayout() {
+  // Altura máxima: 30% de la pantalla (ajústalo si quieres)
+  finalH = Math.min(H * 0.32, 260);
 
+  // Proporción real de la imagen (ajusta si tu PNG cambia)
+  const aspect = finalImg.width && finalImg.height
+    ? finalImg.width / finalImg.height
+    : 0.75; // fallback seguro
+
+  finalW = finalH * aspect;
+
+  // Centrado horizontal
+  finalX = (W - finalW) / 2;
+
+  // 🔴 PEGADO AL FONDO DEL MÓVIL
+  finalY = H - finalH;
+}
+
+updateFinalImageLayout();
+addEventListener("resize", updateFinalImageLayout);
 /* ===== PRECARGA ===== */
 let loaded=0;
 const total=preview.length+santas.length+2;
@@ -262,10 +272,7 @@ function update(){
         playVictoryMusic();
         clearInterval(icebergInterval);
         pipes=[];
-        finalW = Math.min(W * 0.40, 180); // más estrecha
-		finalH = finalW * 1.1;           // ligeramente más alta
-
-		finalX = W / 2 - finalW / 2;
+		updateFinalImageLayout(); 
       }
     }
   });
