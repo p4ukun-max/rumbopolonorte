@@ -78,6 +78,7 @@ canvas{display:block}
 
 <script>
 /* ===== CANVAS ===== */
+let autoMoveSanta = false;
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 let W,H;
@@ -105,7 +106,31 @@ function playVictoryMusic(){
   victoryMusic.volume=0.6;
   victoryMusic.play().catch(()=>{});
 }
+/* REGALOS */
+const gifts = [];
+function launchGifts() {
+  for (let i = 0; i < 12; i++) {
+    gifts.push({
+      x: santa.x + santa.w / 2,
+      y: santa.y + santa.h / 2,
+      tx: finalX + finalW / 2,
+      ty: finalY + finalH / 2,
+      t: 0
+    });
+  }
+}
+function updateGifts() {
+  gifts.forEach(g => g.t += 0.04);
+}
 
+function drawGifts() {
+  ctx.font = "24px serif";
+  gifts.forEach(g => {
+    const x = g.x + (g.tx - g.x) * g.t;
+    const y = g.y + (g.ty - g.y) * g.t;
+    ctx.fillText("🎁", x, y);
+  });
+}
 /* 🖼️ PREVIEW MENÚ */
 const preview = [
   "https://www.dropbox.com/scl/fi/9wfq8we1wn0kdrnjxz52x/random.png?rlkey=ls3zowk6kued1v1jw4cryqpsq&st=wudgp52c&dl=1",
@@ -323,6 +348,13 @@ function update(){
 }
 
   });
+	if (autoMoveSanta) {
+	  const targetX = finalX - santa.w - 10;
+	  const targetY = finalY + finalH - santa.h;
+	
+	  santa.x += (targetX - santa.x) * 0.08;
+	  santa.y += (targetY - santa.y) * 0.08;
+	}
 }
 
 function draw(){
@@ -369,8 +401,10 @@ addEventListener("pointerup",()=>{
       santa.y+santa.h/2<finalY+finalH
     ){
       santaPlaced=true;
+	  autoMoveSanta = true;
       santa.x=finalX+finalW/2-santa.w/2;
       santa.y=finalY-santa.h/2;
+	  launchGifts();
     }
   }
 });
@@ -388,6 +422,7 @@ startBtn.onclick=()=>{
 
 </body>
 </html>
+
 
 
 
