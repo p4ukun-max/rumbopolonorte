@@ -298,6 +298,7 @@ function draw(){
   ctx.fillStyle="#061526"; ctx.fillRect(0,0,W,H);
   drawAurora(); drawSnow();
 
+  ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
   pipes.forEach(p=>{
     ctx.drawImage(icebergImg,p.x,p.bottom,p.w,H-p.bottom);
     ctx.save(); ctx.translate(p.x,p.top); ctx.scale(1,-1);
@@ -312,7 +313,6 @@ function draw(){
 		finalH
 	  );
 	}
-  ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
 }
 
 (function loop(){update();draw();requestAnimationFrame(loop);})();
@@ -357,5 +357,6 @@ startBtn.onclick=()=>{
 
 </body>
 </html>
+
 
 
