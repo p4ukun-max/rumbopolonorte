@@ -14,17 +14,12 @@ html,body{
   font-family:system-ui,sans-serif;
 }
 canvas{display:block}
-
 #loadingScreen{
-  position:fixed;
-  inset:0;
+  position:fixed; inset:0;
   background:radial-gradient(circle,#0b4d2c,#061526);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  z-index:50;
-  color:white;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  z-index:50; color:white;
 }
 .spinner{
   width:48px;height:48px;
@@ -32,38 +27,20 @@ canvas{display:block}
   border-top-color:#7fffd4;
   border-radius:50%;
   animation:spin 1s linear infinite;
-  margin-bottom:16px;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-
 #startMenu{
-  position:fixed;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  color:white;
-  z-index:20;
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  color:white; z-index:20;
 }
-.santaOptions{
-  display:flex;
-  gap:14px;
-  margin-bottom:24px;
-}
-.santaOption{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:6px;
-  font-size:14px;
-}
+.santaOptions{display:flex; gap:14px; margin-bottom:24px;}
+.santaOption{display:flex; flex-direction:column; align-items:center; gap:6px;}
 .santaOption span{opacity:.85}
 .santaOptions img{
-  width:60px;
-  padding:4px;
-  border-radius:14px;
-  cursor:pointer;
+  width:60px; padding:4px;
+  border-radius:14px; cursor:pointer;
   background:rgba(255,255,255,.15);
 }
 .santaOptions img.selected{
@@ -83,7 +60,7 @@ canvas{display:block}
 
 <div id="loadingScreen">
   <div class="spinner"></div>
-  <p>Cargando magia navideña…</p>
+  <p>Cargando magia navideña…✨🎄</p>
 </div>
 
 <div id="startMenu">
@@ -104,26 +81,32 @@ canvas{display:block}
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 let W,H;
-
 function resize(){
   const dpr=Math.min(devicePixelRatio||1,2);
   W=innerWidth; H=innerHeight;
-  canvas.width=W*dpr;
-  canvas.height=H*dpr;
-  canvas.style.width=W+"px";
-  canvas.style.height=H+"px";
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+"px"; canvas.style.height=H+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-resize();
-addEventListener("resize",resize);
+resize(); addEventListener("resize",resize);
+let finalW, finalH, finalX, finalY;
 
+function updateFinalImageLayout(){
+  finalW = Math.min(W * 0.55, 260);
+  finalH = finalW * 1.1;
+
+  finalX = W / 2 - finalW / 2;
+
+  finalY = H - finalH - H * 0.06;
+}
+updateFinalImageLayout();
+addEventListener("resize", updateFinalImageLayout);
 /* ===== AUDIO ===== */
 let music=null, victoryMusic=null, victoryPlayed=false;
 function startMusic(){
   if(music) return;
   music=new Audio("christmas.mp3");
-  music.loop=true;
-  music.volume=0.4;
+  music.loop=true; music.volume=0.4;
   music.play().catch(()=>{});
 }
 function playVictoryMusic(){
@@ -135,15 +118,25 @@ function playVictoryMusic(){
   victoryMusic.play().catch(()=>{});
 }
 
-/* ===== IMÁGENES ===== */
-const preview=[/* tus previews */];
-const santas=[/* tus sprites */];
+/* 🖼️ PREVIEW MENÚ */
+const preview = [
+  "https://www.dropbox.com/scl/fi/9wfq8we1wn0kdrnjxz52x/random.png?rlkey=ls3zowk6kued1v1jw4cryqpsq&st=wudgp52c&dl=1",
+  "https://www.dropbox.com/scl/fi/njdnkyqh8vfr0skbgt3f5/boris.png?rlkey=60d8i2gjcato556v9t43ajatm&st=wxv9k7cs&dl=1",
+  "https://www.dropbox.com/scl/fi/kmh8kxrpmfbqekxhnmbga/lluna.png?rlkey=96fqlv18dkmfnbwumitzswdjd&st=ui4log4o&dl=1",
+  "https://www.dropbox.com/scl/fi/l01xkq152sww7j6kat85c/pitufa.png?rlkey=93p5098lqfkgvfet9oo6oze0l&st=skuxk9x4&dl=1"
+];
 
+/* 🎮 SPRITES JUEGO (MISMO ORDEN) */
+const santas = [
+  "https://www.dropbox.com/scl/fi/h4usenwnm66m3s4mbpgsj/trineo_1.png?rlkey=pc6ou62aiu5216c1ihhc2875e&st=m336zbwp&dl=1",
+  "https://www.dropbox.com/scl/fi/05dnhea63myd1guwnotqi/trineo_3.png?rlkey=rnjdap710lpar3o2ot79eh89p&st=yogg44ow&dl=1",
+  "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_2.png?rlkey=06psxs9942im1y7usdg0qgczb&st=mnb73xe4&dl=1"
+];
 const santaImg=new Image();
 const icebergImg=new Image();
 const finalImg=new Image();
-icebergImg.src="https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?dl=1";
-finalImg.src="https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?dl=1";
+icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=6cffxunf&dl=1";
+finalImg.src   = "https://www.dropbox.com/scl/fi/jc6y5ao7snuzqtrbrq4cb/noel.png?rlkey=ylj0pi9uuqcti2dk3fg2hxqsv&st=48f5n9oi&dl=1";
 
 /* ===== PRECARGA ===== */
 let loaded=0;
@@ -163,59 +156,89 @@ function assetLoaded(){
 
 /* ===== SELECTOR ===== */
 let selected=0;
-const opts=document.querySelectorAll(".santaOption img");
-opts.forEach((img,i)=>{
+document.querySelectorAll(".santaOption img").forEach((img,i)=>{
   img.src=preview[i];
   img.onclick=()=>{
-    opts.forEach(o=>o.classList.remove("selected"));
+    document.querySelectorAll(".santaOption img")
+      .forEach(o=>o.classList.remove("selected"));
     img.classList.add("selected");
     selected=i;
   };
 });
-opts[0].classList.add("selected");
+document.querySelector(".santaOption img").classList.add("selected");
 function getSantaSprite(i){
   if(i===0) return santas[Math.floor(Math.random()*3)];
   return santas[i-1];
 }
 
-/* ===== JUEGO ===== */
-const santa={x:60,y:H/2,w:120,h:90,vel:0,drag:false};
-let pipes=[], started=false, passed=0;
-let icebergInterval=null;
-let finished=false;
-let finalX,finalY,finalW=300,finalH=300;
-let santaPlaced=false;
+/* ===== AURORA (ORIGINAL) ===== */
+let aurora=false, auroraAlpha=0, auroraT=0, auroraState="fadeIn", auroraTimer=0, auroraBaseY=0;
+setInterval(()=>{
+  aurora=true; auroraAlpha=0; auroraState="fadeIn"; auroraTimer=0;
+  auroraBaseY=H*(0.1+Math.random()*0.3);
+},7000);
 
-/* ===== ICEBERGS ===== */
-function createIceberg(){
-  if(finished) return;
-  const gap=260;
-  const top=Math.random()*(H-gap-200)+100;
-  pipes.push({x:W,w:60,top,bottom:top+gap,passed:false});
+function drawAurora(){
+  if(!aurora) return;
+  auroraT+=0.015;
+  if(auroraState==="fadeIn"){auroraAlpha+=0.01;if(auroraAlpha>=0.7){auroraState="visible";}}
+  else if(auroraState==="visible"){if(++auroraTimer>180) auroraState="fadeOut";}
+  else if(auroraState==="fadeOut"){auroraAlpha-=0.006;if(auroraAlpha<=0){aurora=false;return;}}
+  const topY=auroraBaseY, bottomY=topY+H*0.35;
+  ctx.save(); ctx.globalAlpha=auroraAlpha;
+  const g=ctx.createLinearGradient(0,topY,0,bottomY);
+  g.addColorStop(0,"rgba(120,255,200,.45)");
+  g.addColorStop(1,"rgba(180,120,255,.05)");
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.moveTo(0,topY);
+  for(let x=0;x<=W;x+=10) ctx.lineTo(x,topY+Math.sin(x*0.01+auroraT)*35);
+  for(let x=W;x>=0;x-=10) ctx.lineTo(x,bottomY+Math.sin(x*0.008+auroraT+2)*25);
+  ctx.closePath(); ctx.fill(); ctx.restore();
 }
 
-/* ===== COLISIÓN ===== */
-function checkCollision(){
-  if(santa.y<0 || santa.y+santa.h>H) return true;
-  for(const p of pipes){
-    if(
-      santa.x+santa.w>p.x &&
-      santa.x<p.x+p.w &&
-      (santa.y<p.top || santa.y+santa.h>p.bottom)
-    ) return true;
-  }
-  return false;
+/* ===== NIEVE ===== */
+const snow=[];
+for(let i=0;i<80;i++) snow.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2+1,s:Math.random()*1.2+.4});
+function drawSnow(){
+  ctx.fillStyle="white";
+  snow.forEach(f=>{
+    f.y+=f.s; if(f.y>H){f.y=-10;f.x=Math.random()*W;}
+    ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill();
+  });
+}
+
+/* ===== JUEGO ===== */
+const santa={x:60,y:H/2,w:120,h:90,vel:0,drag:false};
+let pipes=[], passed=0, started=false;
+let finished=false, santaPlaced=false;
+let icebergInterval=null;
+/* ===== ICEBERGS (MÁS JUSTO) ===== */
+function createIceberg(){
+  if(finished) return;   // 👈 clave
+  const gap = 260;
+  const top = Math.random() * (H - gap - 200) + 100;
+  pipes.push({
+    x: W,
+    w: 60,
+    top,
+    bottom: top + gap,
+    passed: false
+  });
 }
 
 /* ===== RESET ===== */
 function resetGame(){
-  pipes=[];
-  passed=0;
-  finished=false;
-  victoryPlayed=false;
-  santaPlaced=false;
-  santa.y=H/2;
-  santa.vel=0;
+  pipes=[]; passed=0; finished=false; santaPlaced=false; victoryPlayed=false;
+  santa.y=H/2; santa.vel=0;
+}
+
+/* ===== COLISIÓN ===== */
+function checkCollision(){
+  if(santa.y<0||santa.y+santa.h>H) return true;
+  for(const p of pipes){
+    if(santa.x+santa.w>p.x&&santa.x<p.x+p.w&&(santa.y<p.top||santa.y+santa.h>p.bottom)) return true;
+  }
+  return false;
 }
 
 /* ===== LOOP ===== */
@@ -223,65 +246,60 @@ function update(){
   if(!started) return;
 
   if(!santa.drag && !santaPlaced){
-    santa.vel+=0.25; // gravedad más justa
+    santa.vel+=0.25; // gravedad justa
     santa.y+=santa.vel;
   }
 
   if(!finished && checkCollision()){
-    resetGame();
-    return;
+    resetGame(); return;
   }
 
   pipes.forEach(p=>{
     p.x-=2;
     if(!p.passed && p.x+p.w<santa.x){
-      p.passed=true;
-      passed++;
-      if(passed>=5){
+      p.passed=true; passed++;
+      if(passed>=1){
         finished=true;
         playVictoryMusic();
         clearInterval(icebergInterval);
         pipes=[];
-        finalX=W/2-finalW/2;
-        finalY=H/2-finalH/2;
+        finalW = Math.min(W * 0.40, 180); // más estrecha
+		finalH = finalW * 1.1;           // ligeramente más alta
+
+		finalX = W / 2 - finalW / 2;
       }
     }
   });
 }
 
 function draw(){
-  ctx.fillStyle="#061526";
-  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#061526"; ctx.fillRect(0,0,W,H);
+  drawAurora(); drawSnow();
 
   pipes.forEach(p=>{
     ctx.drawImage(icebergImg,p.x,p.bottom,p.w,H-p.bottom);
-    ctx.save();
-    ctx.translate(p.x,p.top);
-    ctx.scale(1,-1);
-    ctx.drawImage(icebergImg,0,0,p.w,p.top);
-    ctx.restore();
+    ctx.save(); ctx.translate(p.x,p.top); ctx.scale(1,-1);
+    ctx.drawImage(icebergImg,0,0,p.w,p.top); ctx.restore();
   });
-
-  if(finished){
-    ctx.drawImage(finalImg,finalX,finalY,finalW,finalH);
+  if(started && finished){
+	  ctx.drawImage(
+		finalImg,
+		finalX,
+		finalY,
+		finalW,
+		finalH
+	  );
+	ctx.globalAlpha = 1;
   }
-
   ctx.drawImage(santaImg,santa.x,santa.y,santa.w,santa.h);
 }
 
-(function loop(){
-  update();
-  draw();
-  requestAnimationFrame(loop);
-})();
+(function loop(){update();draw();requestAnimationFrame(loop);})();
 
 /* ===== INPUT ===== */
 addEventListener("pointerdown",e=>{
-  if(finished){
-    santa.drag=true;
-  }else if(started){
-    santa.vel=-6;
-  }
+  if(finished){santa.drag=true;}
+  else if(started){santa.vel=-6.5;}
 });
 addEventListener("pointermove",e=>{
   if(santa.drag){
@@ -310,10 +328,9 @@ startBtn.onclick=()=>{
   startMusic();
   startMenu.style.display="none";
   santaImg.src=getSantaSprite(selected);
-  resetGame();
-  started=true;
+  resetGame(); started=true;
   if(icebergInterval) clearInterval(icebergInterval);
-  icebergInterval=setInterval(createIceberg,1800);
+  icebergInterval=setInterval(createIceberg,2000);
 };
 </script>
 
