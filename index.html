@@ -240,7 +240,12 @@ function createIceberg(){
 
 /* ===== RESET ===== */
 function resetGame(){
-  pipes=[]; passed=0; finished=false; santaPlaced=false; victoryPlayed=false;
+  if (passed === TOTAL_ICEBERGS) {
+	  finished = true;
+	  playVictoryMusic();
+	  clearInterval(icebergInterval);
+	}
+passed=0; finished=false; santaPlaced=false; victoryPlayed=false;
   santa.y=H/2; santa.vel=0;
 }
 
@@ -352,3 +357,4 @@ startBtn.onclick=()=>{
 
 </body>
 </html>
+
