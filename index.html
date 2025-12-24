@@ -77,6 +77,25 @@ canvas{display:block}
 <canvas id="game"></canvas>
 
 <script>
+const gifts = [];
+function throwGift() {
+  if (!finalPlatform) return;
+
+  gifts.push({
+    t: 0,
+    speed: 0.02 + Math.random() * 0.01,
+
+    startX: santa.x + santa.w / 2,
+    startY: santa.y + santa.h / 2,
+
+    endX: finalPlatform.x + finalPlatform.w / 2 + (Math.random() * 80 - 40),
+    endY: finalPlatform.y + 80,
+
+    arc: 120 + Math.random() * 60, // altura del arco
+    size: 22 + Math.random() * 8
+  });
+}
+
 const startBtn = document.getElementById("startBtn");
 let screenW = 0;
 let screenH = 0;
@@ -104,22 +123,13 @@ resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
 /* ===== AUDIO ===== */
-let music=null, victoryMusic=null, victoryPlayed=false;
+let music=null;
 function startMusic(){
   if(music) return;
   music=new Audio("christmas.mp3");
-  music.loop=true; music.volume=0.4;
+  music.loop=true; music.volume=0.2;
   music.play().catch(()=>{});
 }
-function playVictoryMusic(){
-  if(victoryPlayed) return;
-  victoryPlayed=true;
-  music?.pause();
-  victoryMusic=new Audio("victory.mp3");
-  victoryMusic.volume=0.6;
-  victoryMusic.play().catch(()=>{});
-}
-
 
 /* 🖼️ PREVIEW MENÚ */
 const preview = [
@@ -293,13 +303,15 @@ function createFinalPlatform() {
     };
 }
 //update
+let victoryPlayed = false;
+let victoryMusic = null;
 function update() {
-    if (!started || finished || assetsLoaded < TOTAL_ASSETS) return;
+	if (!started || assetsLoaded < TOTAL_ASSETS) return;
 
     if (!gameOver) {
-        santa.vel += gravity;
-        santa.y += santa.vel;
-    }
+	  santa.vel += gravity;
+	  santa.y += santa.vel;
+	}
 
     pipes.forEach(p => p.x -= 3);
 
@@ -322,10 +334,45 @@ function update() {
         if (finalPlatform.x <= santa.x + 20) {
             finished = true;
             pipes = [];
-            santa.y = finalPlatform.y - santa.h + 10;
-            santa.vel = 0;
+			if (!victoryPlayed) {
+				victoryPlayed = true;
+				music?.pause();
+
+				victoryMusic = new Audio("victory.mp3");
+				victoryMusic.volume = 0.4;
+				victoryMusic.play().catch(()=>{});
+			  }
         }
     }
+	if (finished && Math.random() < 0.15) {
+	  throwGift();
+	}
+
+	gifts.forEach(g => {
+	  g.t += g.speed;
+	});
+
+	// eliminar regalos que llegaron
+	for (let i = gifts.length - 1; i >= 0; i--) {
+	  if (gifts[i].t >= 1) {
+		gifts.splice(i, 1);
+	  }
+	}
+	if (finished && finalPlatform) {
+	  finalPlatform.x = santa.x + santa.w + 10;
+	}	
+		// ⛔ Límites tras llegar al final
+	if (finished) {
+	  if (santa.y < 0) {
+		santa.y = 0;
+		santa.vel = 0;
+	  }
+	  const ground = screenH - santa.h - 10;
+	  if (santa.y > ground) {
+		santa.y = ground;
+		santa.vel = 0;
+	  }
+	}
 }
 // ================== LOOP ==================
 function loop() {
@@ -371,7 +418,24 @@ function draw() {
     }
 	if (!santaImg.src) return;
     ctx.drawImage(santaImg, santa.x, santa.y, santa.w, santa.h);
+	gifts.forEach(g => {
+	  const t = g.t;
 
+	  // interpolación horizontal
+	  const x = g.startX + (g.endX - g.startX) * t;
+
+	  // interpolación vertical con arco
+	  const y =
+		g.startY +
+		(g.endY - g.startY) * t -
+		Math.sin(Math.PI * t) * g.arc;
+
+	  ctx.font = `${g.size}px serif`;
+	  ctx.textAlign = "center";
+	  ctx.fillText("🎁", x, y);
+	});
+
+	ctx.textAlign = "left";
     if (!started) {
         ctx.fillStyle = "white";
         ctx.font = "24px sans-serif";
@@ -411,8 +475,12 @@ let inputLocked = false;
 function handleInput() {
 
   if (gameOver) {
+    victoryPlayed = false;
+    victoryMusic?.pause();
+    victoryMusic = null;
     pipes = [];
     icebergCount = 0;
+    gifts.length = 0;
     finalPlatform = null;
     gameOver = false;
     finished = false;
@@ -429,10 +497,14 @@ function handleInput() {
     icebergInterval = setInterval(createIceberg, 1900);
   }
 
-  if (!finished) santa.vel = lift;
+  santa.vel = lift;
 }
 
 startBtn.onclick = () => {
+  victoryPlayed = false;
+  victoryMusic?.pause();
+  victoryMusic = null;
+  gifts.length = 0;
   icebergCount = 0;
   finalPlatform = null;
   gameOver = false;
@@ -446,7 +518,14 @@ startBtn.onclick = () => {
   showHint = true;    
 };
 document.addEventListener("pointerdown", handleInput);
+resizeSanta();
+window.addEventListener("resize", resizeSanta);
+function resizeSanta() {
+  const scale = Math.min(screenW / 360, 1);
 
+  santa.w = 120 * scale;
+  santa.h = 120 * scale;
+}
 loop();
 
 </script>
