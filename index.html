@@ -318,7 +318,7 @@ function update() {
 	  santa.y += santa.vel;
 	}
 
-    pipes.forEach(p => p.x -= 3);
+    pipes.forEach(p => p.x -= 2);
 
     pipes.forEach(p => {
         if (
@@ -499,7 +499,7 @@ function handleInput() {
   if (!started) {
     started = true;       // 👈 AQUÍ empieza la partida
     showHint = false;     // 👈 se oculta el mensaje
-    icebergInterval = setInterval(createIceberg, 1900);
+    icebergInterval = setInterval(createIceberg, 2600);
   }
 
   santa.vel = lift;
