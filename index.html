@@ -146,6 +146,7 @@ const santas = [
   "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_2.png?rlkey=06psxs9942im1y7usdg0qgczb&st=mnb73xe4&dl=1"
 ];
 const santaImg=new Image();
+santaImg.onload = resizeSanta;
 const icebergImg=new Image();
 const finalImg=new Image();
 icebergImg.src = "https://www.dropbox.com/scl/fi/t0jk7vrotgrykx912v5le/hielo.png?rlkey=9z8pxtztv5q9ogdbpc68qet58&st=6cffxunf&dl=1";
@@ -289,18 +290,22 @@ function checkCollision() {
 // ================== FINAL ==================
 function createFinalPlatform() {
 
-    // Escala relativa al ancho de pantalla
-    const scale = Math.min(screenW / 360, 1);
+  const scale = Math.min(screenW / 420, 1);
 
-    const w = 300 * scale;
-    const h = 420 * scale;
+  let ratio = 0.7; // fallback
+  if (finalImg.complete && finalImg.naturalHeight > 0) {
+    ratio = finalImg.naturalWidth / finalImg.naturalHeight;
+  }
 
-    finalPlatform = {
-        w,
-        h,
-        x: screenW,
-        y: screenH - h   // 👈 clave: apoyada en el suelo
-    };
+  const h = 320 * scale;   // tamaño visual final
+  const w = h * ratio;
+
+  finalPlatform = {
+    w,
+    h,
+    x: screenW,
+    y: screenH - h - 10
+  };
 }
 //update
 let victoryPlayed = false;
@@ -359,7 +364,7 @@ function update() {
 	  }
 	}
 	if (finished && finalPlatform) {
-	  finalPlatform.x = santa.x + santa.w + 10;
+	  finalPlatform.x = santa.x + santa.w - finalPlatform.w * 0.35;
 	}	
 		// ⛔ Límites tras llegar al final
 	if (finished) {
@@ -521,10 +526,17 @@ document.addEventListener("pointerdown", handleInput);
 resizeSanta();
 window.addEventListener("resize", resizeSanta);
 function resizeSanta() {
-  const scale = Math.min(screenW / 360, 1);
+  const scale = Math.min(screenW / 420, 1);
 
-  santa.w = 120 * scale;
-  santa.h = 120 * scale;
+  // La altura manda
+  santa.h = 90 * scale;
+
+  // El ancho se calcula según la proporción real de la imagen
+  if (santaImg.complete && santaImg.naturalHeight > 0) {
+    santa.w = santa.h * (santaImg.naturalWidth / santaImg.naturalHeight);
+  } else {
+    santa.w = santa.h * 2.5; // fallback seguro
+  }
 }
 loop();
 
