@@ -70,6 +70,7 @@ canvas{display:block}
     <div class="santaOption"><img><span>Boris</span></div>
     <div class="santaOption"><img><span>Lluna</span></div>
     <div class="santaOption"><img><span>Pitufa</span></div>
+    <div class="santaOption"><img><span>Pancho</span></div>
   </div>
   <button id="startBtn">Iniciar Juego</button>
 </div>
@@ -136,14 +137,16 @@ const preview = [
   "https://www.dropbox.com/scl/fi/9wfq8we1wn0kdrnjxz52x/random.png?rlkey=ls3zowk6kued1v1jw4cryqpsq&st=wudgp52c&dl=1",
   "https://www.dropbox.com/scl/fi/njdnkyqh8vfr0skbgt3f5/boris.png?rlkey=60d8i2gjcato556v9t43ajatm&st=wxv9k7cs&dl=1",
   "https://www.dropbox.com/scl/fi/kmh8kxrpmfbqekxhnmbga/lluna.png?rlkey=96fqlv18dkmfnbwumitzswdjd&st=ui4log4o&dl=1",
-  "https://www.dropbox.com/scl/fi/l01xkq152sww7j6kat85c/pitufa.png?rlkey=93p5098lqfkgvfet9oo6oze0l&st=skuxk9x4&dl=1"
+  "https://www.dropbox.com/scl/fi/l01xkq152sww7j6kat85c/pitufa.png?rlkey=93p5098lqfkgvfet9oo6oze0l&st=skuxk9x4&dl=1",
+   "https://www.dropbox.com/scl/fi/rk23bhpjxym2u4bg7yrwv/pancho.png?rlkey=2crqukwh1r6jmg9ec9ru27bdo&st=4ozx3sdz&dl=1"
 ];
 
 /* 🎮 SPRITES JUEGO (MISMO ORDEN) */
 const santas = [
   "https://www.dropbox.com/scl/fi/h4usenwnm66m3s4mbpgsj/trineo_1.png?rlkey=pc6ou62aiu5216c1ihhc2875e&st=m336zbwp&dl=1",
   "https://www.dropbox.com/scl/fi/05dnhea63myd1guwnotqi/trineo_3.png?rlkey=rnjdap710lpar3o2ot79eh89p&st=yogg44ow&dl=1",
-  "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_2.png?rlkey=06psxs9942im1y7usdg0qgczb&st=mnb73xe4&dl=1"
+  "https://www.dropbox.com/scl/fi/ncvfs2yf0v0qtvuhkbhlj/tirineo_2.png?rlkey=06psxs9942im1y7usdg0qgczb&st=mnb73xe4&dl=1",
+  "https://www.dropbox.com/scl/fi/75e3f1h3f5sx24l8qnwg1/trineo_4.png?rlkey=gpspe271fp9zlmje3bzb57jwa&st=0x6fxism&dl=1"
 ];
 const santaImg=new Image();
 santaImg.onload = resizeSanta;
@@ -168,13 +171,13 @@ function getSantaSprite() {
   let index;
 
   if (selectedSanta === 0) {
-    // Aleatorio entre 1, 2 y 3
-    index = Math.floor(Math.random() * 3) + 1;
+    // Aleatorio entre 1, 2 y 3, 4
+    index = Math.floor(Math.random() * 4) + 1;
   } else {
     index = selectedSanta;
   }
 
-  // Convertimos 1,2,3 → 0,1,2
+  // Convertimos 1,2,3 → 0,1,2,3
   return santas[index - 1];
 }
 
@@ -544,4 +547,5 @@ loop();
 
 </body>
 </html>
+
 
