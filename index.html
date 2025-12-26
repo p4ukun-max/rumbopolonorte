@@ -100,7 +100,7 @@ function throwGift() {
 const startBtn = document.getElementById("startBtn");
 let screenW = 0;
 let screenH = 0;
-const TOTAL_ICEBERGS = 10;
+const TOTAL_ICEBERGS = 20;
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -500,9 +500,9 @@ function handleInput() {
   }
 
   if (!started) {
-    started = true;       // 👈 AQUÍ empieza la partida
-    showHint = false;     // 👈 se oculta el mensaje
-    icebergInterval = setInterval(createIceberg, 2600);
+    started = true;       
+    showHint = false;     
+    icebergInterval = setInterval(createIceberg, 2000);
   }
 
   santa.vel = lift;
@@ -547,6 +547,7 @@ loop();
 
 </body>
 </html>
+
 
 
 
